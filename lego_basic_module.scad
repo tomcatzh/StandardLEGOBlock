@@ -14,6 +14,13 @@
  */
 
 // ========================================
+// 全局渲染设置 - Global Rendering Settings
+// ========================================
+
+// 设置圆形分辨率 - Set circular resolution
+$fn = 96;
+
+// ========================================
 // 用户可配置参数 - User Configurable Parameters
 // ========================================
 
@@ -271,8 +278,7 @@ module single_stud() {
     cylinder(
         h = StudHeight,           // 凸点高度 - Stud height
         d = StudDiameter,         // 凸点直径 - Stud diameter
-        center = false,           // 从底面开始 - Start from bottom
-        $fn = 32                  // 高分辨率圆柱体 - High resolution cylinder
+        center = false            // 从底面开始 - Start from bottom
     );
 }
 
@@ -305,16 +311,14 @@ module single_tube() {
         cylinder(
             h = TubeHeight,                    // 管道高度 - Tube height
             d = TubeOuterDiameter,             // 外径 - Outer diameter
-            center = false,                    // 从底面开始 - Start from bottom
-            $fn = 32                           // 高分辨率圆柱体 - High resolution cylinder
+            center = false                     // 从底面开始 - Start from bottom
         );
         
         // 内径圆柱几何体（形成空腔）- Inner cylinder geometry (creates cavity)
         cylinder(
             h = TubeHeight + 0.1,              // 稍微高一点确保完全切除 - Slightly taller to ensure complete cut
             d = TubeInnerDiameter,             // 内径 - Inner diameter
-            center = false,                    // 从底面开始 - Start from bottom
-            $fn = 32                           // 高分辨率圆柱体 - High resolution cylinder
+            center = false                     // 从底面开始 - Start from bottom
         );
     }
 }
