@@ -39,11 +39,22 @@ LegoBlock
 ## 组件和接口
 
 ### 1. 参数定义模块
+
+#### MakerWorld参数化结构
 ```openscad
-// 用户可配置参数
-Width = 4;           // 宽度方向单位数
-Length = 2;          // 长度方向单位数  
-Height = 3;          // 层数
+/* [Parameters] */
+// 积木宽度（单位数量）- Block width in units
+width = 6; // [1:31]
+
+// 积木长度（单位数量）- Block length in units  
+length = 2; // [1:31]
+
+// 积木高度（层数）- Block height in layers
+height = 3; // [1:Low, 3:High]
+
+/* [Hidden] */
+// 全局渲染设置
+$fn = 96;
 
 // 乐高标准规格常量
 LayerSize = 3.2;           // 每层高度 (mm)
@@ -57,6 +68,13 @@ TubeInnerDiameter = 4.8;   // 内管直径 (mm)
 TubeOuterDiameter = 6.5;   // 外管直径 (mm)
 TubeMargin = 8.0;          // 管道边距 (mm)
 ```
+
+#### 参数化设计原则
+1. **用户可见参数**: 仅暴露width、length、height三个核心参数
+2. **滑块控件**: width和length使用1-31范围的滑块，最大值对应约250mm模型尺寸
+3. **下拉菜单**: height使用带标签的下拉菜单，提供Low(1层)和High(3层)选项
+4. **隐藏参数**: 所有技术参数和常量放在Hidden标签下，用户不可见
+5. **兼容性**: 保持与现有OpenSCAD代码的完全兼容
 
 ### 2. 外壳组件 (ExteriorShell)
 **功能**: 生成积木的主体薄壳外壳

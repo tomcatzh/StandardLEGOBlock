@@ -5,7 +5,7 @@
  * 支持自定义尺寸参数，并针对3D打印进行了优化
  * 
  * 使用方法：
- * 1. 修改下方的用户参数（Width, Length, Height）
+ * 1. 修改下方的用户参数（width, length, height）
  * 2. 按F5预览模型，按F6渲染完整模型
  * 3. 导出STL文件用于3D打印
  * 
@@ -13,29 +13,21 @@
  * 打印建议：建议使用0.2mm层高，15-20%填充率
  */
 
-// ========================================
-// 全局渲染设置 - Global Rendering Settings
-// ========================================
+/* [Parameters] */
+
+// 积木宽度（单位数量）- Block width in units
+width = 6; // [1:31]
+
+// 积木长度（单位数量）- Block length in units  
+length = 2; // [1:31]
+
+// 积木高度（层数）- Block height in layers
+height = 3; // [1:Low, 3:High]
+
+/* [Hidden] */
 
 // 设置圆形分辨率 - Set circular resolution
 $fn = 96;
-
-// ========================================
-// 用户可配置参数 - User Configurable Parameters
-// ========================================
-
-// 积木宽度（单位数量）- Block width in units
-// 默认值：4个单位 (32mm)
-Width = 6;
-
-// 积木长度（单位数量）- Block length in units  
-// 默认值：2个单位 (16mm)
-Length = 2;
-
-// 积木高度（层数）- Block height in layers
-// 默认值：3层 (9.6mm)
-// 注意：所有积木都有底部管道
-Height = 3;
 
 // ========================================
 // 乐高标准规格常量 - LEGO Standard Specifications
@@ -134,7 +126,7 @@ function calculate_tube_height(height, layer_size) =
 // ========================================
 
 // 使用函数计算外壳尺寸 - Calculate exterior dimensions using functions
-OuterDimensions = calculate_outer_dimensions(Width, Length, Height, UnitSize, CLEARANCESize);
+OuterDimensions = calculate_outer_dimensions(width, length, height, UnitSize, CLEARANCESize);
 OuterWidth = OuterDimensions[0];
 OuterLength = OuterDimensions[1];
 OuterHeight = OuterDimensions[2];
@@ -146,34 +138,34 @@ InnerLength = InnerDimensions[1];
 InnerHeight = InnerDimensions[2];
 
 // 使用函数计算凸点位置 - Calculate stud positions using functions
-StudPositions = calculate_stud_positions(Width, Length, UnitSize);
+StudPositions = calculate_stud_positions(width, length, UnitSize);
 
 // 使用函数计算管道位置 - Calculate tube positions using functions
 ActualTubeMargin = apply_clearance_adjustment(TubeMargin, CLEARANCESize, "half");
-TubePositions = calculate_tube_positions(Width, Length, ActualTubeMargin);
+TubePositions = calculate_tube_positions(width, length, ActualTubeMargin);
 
 // 管道相关计算 - Tube calculations
-TubeHeight = calculate_tube_height(Height, LayerSize);
+TubeHeight = calculate_tube_height(height, LayerSize);
 
 // 间隙调整后的边距 - Clearance-adjusted margins
 ActualStudMargin = apply_clearance_adjustment(StudMargin, CLEARANCESize, "half");
 
 // 数量计算 - Count calculations
-StudCount = calculate_stud_count(Width, Length);
-TubeCount = calculate_tube_count(Width, Length, Height);
+StudCount = calculate_stud_count(width, length);
+TubeCount = calculate_tube_count(width, length, height);
 
 // ========================================
 // 参数验证和调试输出 - Parameter Validation & Debug Output
 // ========================================
 
 // 参数验证 - Parameter validation
-assert(validate_parameters(Width, Length, Height), 
-       "错误 ERROR: Width, Length, Height 必须大于0 - must be greater than 0");
+assert(validate_parameters(width, length, height), 
+       "错误 ERROR: width, length, height 必须大于0 - must be greater than 0");
 
 // 额外的参数验证 - Additional parameter validation
-assert(Width > 0, "错误 ERROR: Width 必须大于0 - Width must be greater than 0");
-assert(Length > 0, "错误 ERROR: Length 必须大于0 - Length must be greater than 0"); 
-assert(Height > 0, "错误 ERROR: Height 必须大于0 - Height must be greater than 0");
+assert(width > 0, "错误 ERROR: width 必须大于0 - width must be greater than 0");
+assert(length > 0, "错误 ERROR: length 必须大于0 - length must be greater than 0"); 
+assert(height > 0, "错误 ERROR: height 必须大于0 - height must be greater than 0");
 
 // 壁厚验证 - Wall thickness validation
 assert(InnerWidth > 0 && InnerLength > 0, 
@@ -185,7 +177,7 @@ assert(OuterWidth > 0 && OuterLength > 0,
 
 // 调试输出 - 显示计算的尺寸
 echo("=== 乐高积木参数 LEGO Block Parameters ===");
-echo(str("尺寸规格 Dimensions: ", Width, "x", Length, "x", Height));
+echo(str("尺寸规格 Dimensions: ", width, "x", length, "x", height));
 echo(str("外部尺寸 Outer Size: ", OuterWidth, "x", OuterLength, "x", OuterHeight, "mm"));
 echo(str("内部空腔 Inner Cavity: ", InnerWidth, "x", InnerLength, "x", InnerHeight, "mm"));
 echo(str("凸点数量 Stud Count: ", StudCount));
@@ -202,10 +194,10 @@ echo(str("间隙调整 Clearance: ", CLEARANCESize, "mm"));
 echo("==========================================");
 
 // 合理性警告 - Reasonableness warnings
-if (Width > 10 || Length > 10) {
+if (width > 10 || length > 10) {
     echo("警告 WARNING: 大尺寸积木可能需要更长的打印时间 - Large blocks may require longer print time");
 }
-if (Height > 10) {
+if (height > 10) {
     echo("警告 WARNING: 高积木可能需要支撑结构进行打印 - Tall blocks may require support structures for printing");
 }
 if (WallThickness < 1.2) {
@@ -254,13 +246,13 @@ module exterior_shell() {
 
 // 顶部凸点阵列模块 - Top studs array module
 module top_studs() {
-    // 使用循环生成Width × Length的凸点阵列
-    // Use loops to generate Width × Length stud array
-    for (i = [0:Width-1]) {
-        for (j = [0:Length-1]) {
+    // 使用循环生成width × length的凸点阵列
+    // Use loops to generate width × length stud array
+    for (i = [0:width-1]) {
+        for (j = [0:length-1]) {
             // 计算凸点位置 - Calculate stud position
-            stud_x = (i - (Width-1)/2) * UnitSize;
-            stud_y = (j - (Length-1)/2) * UnitSize;
+            stud_x = (i - (width-1)/2) * UnitSize;
+            stud_y = (j - (length-1)/2) * UnitSize;
             stud_z = OuterHeight; // 凸点位于顶面 - Studs on top surface
             
             // 生成单个凸点 - Generate single stud
@@ -285,13 +277,13 @@ module single_stud() {
 // 底部管道阵列模块 - Bottom tubes array module
 module bottom_tubes() {
     // 使用循环生成管道阵列 - Use loops to generate tube array
-    // 管道数量：(Width-1) × (Length-1) - Tube count: (Width-1) × (Length-1)
-    for (i = [0:Width-2]) {
-        for (j = [0:Length-2]) {
+    // 管道数量：(width-1) × (length-1) - Tube count: (width-1) × (length-1)
+    for (i = [0:width-2]) {
+        for (j = [0:length-2]) {
             // 计算管道位置 - Calculate tube position
             // 圆心距离基于TubeMargin，考虑间隙调整 - Center distance based on TubeMargin with clearance
-            tube_x = (i - (Width-2)/2) * ActualTubeMargin;
-            tube_y = (j - (Length-2)/2) * ActualTubeMargin;
+            tube_x = (i - (width-2)/2) * ActualTubeMargin;
+            tube_y = (j - (length-2)/2) * ActualTubeMargin;
             tube_z = 0; // 管道从底面开始 - Tubes start from bottom
             
             // 生成单个薄壳管道 - Generate single thin-wall tube

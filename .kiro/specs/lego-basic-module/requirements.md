@@ -68,3 +68,17 @@
 2. WHEN 生成模型 THEN 系统 SHALL 确保模型结构适合STL导出
 3. WHEN 导出STL文件 THEN 系统 SHALL 生成无错误的可打印网格
 4. WHEN 其他用户使用模型 THEN 系统 SHALL 提供易于理解的参数说明
+
+### 需求 6
+
+**用户故事：** 作为MakerWorld平台的用户，我希望能够通过网页界面自定义乐高积木的尺寸参数，以便我可以直接在平台上生成所需规格的积木模型。
+
+#### 验收标准
+
+1. WHEN 用户在MakerWorld上访问模型 THEN 系统 SHALL 提供width和length的滑块控件，范围为1-31
+2. WHEN 用户在MakerWorld上访问模型 THEN 系统 SHALL 提供height的带标签下拉菜单，High对应3，Low对应1
+3. WHEN 用户调整参数 THEN 系统 SHALL 隐藏所有内部技术参数（如$fn、常量等）在/* [Hidden] */标签下
+4. WHEN 用户设置width或length为31 THEN 系统 SHALL 生成约250mm尺寸的模型（适合大部分256mm×256mm打印机）
+5. WHEN 用户选择High高度 THEN 系统 SHALL 生成3层高度的积木
+6. WHEN 用户选择Low高度 THEN 系统 SHALL 生成1层高度的积木
+7. WHEN 模型在MakerWorld上显示 THEN 系统 SHALL 按照拓竹Bambulab的参数化注释规范格式化所有参数
