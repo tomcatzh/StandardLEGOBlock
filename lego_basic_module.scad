@@ -16,10 +16,10 @@
 /* [Parameters] */
 
 // 积木宽度（单位数量）- Block width in units
-width = 6; // [1:31]
+width = 2; // [1:31]
 
 // 积木长度（单位数量）- Block length in units  
-length = 2; // [1:31]
+length = 1; // [1:31]
 
 // 积木高度（层数）- Block height in layers
 height = 3; // [1:Low, 3:High]
@@ -85,15 +85,16 @@ function calculate_stud_positions(width, length, unit_size) = [
 
 // 计算管道位置的函数（基于主体方块网格）
 // Calculate tube positions based on main block grid
-function calculate_tube_positions(width, length, tube_margin) = [
-    for (i = [0:width-2])  // width-1 个管道
-        for (j = [0:length-2])  // length-1 个管道
-            [
-                (i - (width-2)/2) * tube_margin,   // X位置 - X position
-                (j - (length-2)/2) * tube_margin,  // Y位置 - Y position
-                0                                  // Z位置 - Z position (底面)
-            ]
-];
+function calculate_tube_positions(width, length, tube_margin) = 
+    (width > 1 && length > 1) ? [
+        for (i = [0:width-2])  // width-1 个管道
+            for (j = [0:length-2])  // length-1 个管道
+                [
+                    (i - (width-2)/2) * tube_margin,   // X位置 - X position
+                    (j - (length-2)/2) * tube_margin,  // Y位置 - Y position
+                    0                                  // Z位置 - Z position (底面)
+                ]
+    ] : [];
 
 // 应用间隙调整的函数
 // Apply clearance adjustments function
@@ -111,10 +112,10 @@ function validate_parameters(width, length, height) =
 // Calculate stud count
 function calculate_stud_count(width, length) = width * length;
 
-// 计算管道数量（所有积木都有管道）
-// Calculate tube count (all blocks have tubes)
+// 计算管道数量（只有当width>1且length>1时才有管道）
+// Calculate tube count (only when width>1 and length>1)
 function calculate_tube_count(width, length, height) = 
-    (width - 1) * (length - 1);
+    (width > 1 && length > 1) ? (width - 1) * (length - 1) : 0;
 
 // 计算管道高度
 // Calculate tube height
@@ -276,19 +277,22 @@ module single_stud() {
 
 // 底部管道阵列模块 - Bottom tubes array module
 module bottom_tubes() {
-    // 使用循环生成管道阵列 - Use loops to generate tube array
-    // 管道数量：(width-1) × (length-1) - Tube count: (width-1) × (length-1)
-    for (i = [0:width-2]) {
-        for (j = [0:length-2]) {
-            // 计算管道位置 - Calculate tube position
-            // 圆心距离基于TubeMargin，考虑间隙调整 - Center distance based on TubeMargin with clearance
-            tube_x = (i - (width-2)/2) * ActualTubeMargin;
-            tube_y = (j - (length-2)/2) * ActualTubeMargin;
-            tube_z = 0; // 管道从底面开始 - Tubes start from bottom
-            
-            // 生成单个薄壳管道 - Generate single thin-wall tube
-            translate([tube_x, tube_y, tube_z]) {
-                single_tube();
+    // 只有当width>1且length>1时才生成管道 - Only generate tubes when width>1 and length>1
+    if (width > 1 && length > 1) {
+        // 使用循环生成管道阵列 - Use loops to generate tube array
+        // 管道数量：(width-1) × (length-1) - Tube count: (width-1) × (length-1)
+        for (i = [0:width-2]) {
+            for (j = [0:length-2]) {
+                // 计算管道位置 - Calculate tube position
+                // 圆心距离基于TubeMargin，考虑间隙调整 - Center distance based on TubeMargin with clearance
+                tube_x = (i - (width-2)/2) * ActualTubeMargin;
+                tube_y = (j - (length-2)/2) * ActualTubeMargin;
+                tube_z = 0; // 管道从底面开始 - Tubes start from bottom
+                
+                // 生成单个薄壳管道 - Generate single thin-wall tube
+                translate([tube_x, tube_y, tube_z]) {
+                    single_tube();
+                }
             }
         }
     }
