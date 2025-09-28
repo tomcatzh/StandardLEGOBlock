@@ -381,122 +381,9 @@ function calculate_position_bounds(positions, brick_width, brick_length) =
 
 // 尺寸验证和警告系统 - Size Validation and Warning System
 
-/*
- * 尺寸验证和警告系统说明 - Size Validation and Warning System Description
- * 
- * 功能：验证平铺尺寸并提供相应的警告和建议
- * Function: Validate tiling dimensions and provide appropriate warnings and suggestions
- * 
- * 主要检查项目 - Main Check Items:
- * 1. 打印床尺寸限制 - Print bed size limitations (256x256mm)
- * 2. 性能影响评估 - Performance impact assessment
- * 3. 平铺信息显示 - Tiling information display
- * 4. 打印建议提供 - Printing recommendations
- * 
- * 警告级别 - Warning Levels:
- * - 信息 INFO: 正常的配置信息显示
- * - 提示 HINT: 性能和使用建议
- * - 警告 WARNING: 可能的问题和限制
- * - 错误 ERROR: 严重问题，可能导致失败
- */
 
-/*
- * 尺寸验证和警告的主模块 - Main module for size validation and warnings
- * 
- * 功能描述 Function Description:
- * 这是一个综合性的尺寸验证和警告系统，负责检查平铺配置的各个方面，
- * 包括打印床兼容性、性能影响、尺寸合理性等，并提供详细的建议和警告。
- * 
- * This is a comprehensive size validation and warning system responsible for checking
- * various aspects of tiling configuration, including print bed compatibility, 
- * performance impact, size reasonableness, etc., and providing detailed suggestions and warnings.
- * 
- * 参数说明 Parameter Description:
- * @param total_x: 平铺总宽度(mm) Total tiling width in mm
- * @param total_y: 平铺总长度(mm) Total tiling length in mm
- * @param grid_x: X方向积木数量 Number of bricks in X direction
- * @param grid_y: Y方向积木数量 Number of bricks in Y direction
- * @param tile_units: 积木总数量 Total number of bricks
- * @param brick_width: 单个积木宽度(单位) Single brick width in units
- * @param brick_length: 单个积木长度(单位) Single brick length in units
- * 
- * 验证项目 Validation Items:
- * 
- * 1. 基本信息显示 Basic Information Display:
- *    - 积木规格和数量 Brick specifications and count
- *    - 网格排列方式 Grid arrangement pattern
- *    - 总体尺寸和长宽比 Overall dimensions and aspect ratio
- * 
- * 2. 打印床兼容性检查 Print Bed Compatibility Check:
- *    - 标准打印床(256×256mm)兼容性 Standard bed compatibility
- *    - 大型打印床(300×300mm)兼容性 Large bed compatibility
- *    - 尺寸超限警告 Size limit warnings
- * 
- * 3. 性能影响评估 Performance Impact Assessment:
- *    - 渲染性能预估 Rendering performance estimation
- *    - 内存使用评估 Memory usage assessment
- *    - 处理时间预警 Processing time warnings
- * 
- * 4. 打印建议生成 Printing Recommendations Generation:
- *    - 基于尺寸的打印设置建议 Size-based print setting suggestions
- *    - 材料和支撑建议 Material and support recommendations
- *    - 质量优化建议 Quality optimization suggestions
- * 
- * 5. 布局优化建议 Layout Optimization Suggestions:
- *    - 长宽比优化建议 Aspect ratio optimization suggestions
- *    - 参数调整建议 Parameter adjustment suggestions
- *    - 替代配置推荐 Alternative configuration recommendations
- * 
- * 警告级别系统 Warning Level System:
- * 
- * ✓ 信息 INFO (绿色):
- *   - 正常配置信息 Normal configuration info
- *   - 兼容性确认 Compatibility confirmation
- *   - 成功状态显示 Success status display
- * 
- * ⚠ 提示 HINT (黄色):
- *   - 性能建议 Performance suggestions
- *   - 优化提示 Optimization hints
- *   - 最佳实践建议 Best practice recommendations
- * 
- * ⚠ 警告 WARNING (橙色):
- *   - 潜在问题警告 Potential issue warnings
- *   - 限制条件提醒 Limitation reminders
- *   - 注意事项说明 Precaution explanations
- * 
- * ✗ 错误 ERROR (红色):
- *   - 严重问题报告 Critical issue reports
- *   - 不可行配置警告 Infeasible configuration warnings
- *   - 必须修改的问题 Issues that must be fixed
- * 
- * 打印床尺寸标准 Print Bed Size Standards:
- * 
- * 小型打印床 Small Print Beds:
- * - 200×200mm: 入门级打印机 Entry-level printers
- * - 220×220mm: 常见桌面打印机 Common desktop printers
- * 
- * 标准打印床 Standard Print Beds:
- * - 256×256mm: 主流打印机标准 Mainstream printer standard
- * - 250×250mm: 常见工业标准 Common industrial standard
- * 
- * 大型打印床 Large Print Beds:
- * - 300×300mm: 大型桌面打印机 Large desktop printers
- * - 400×400mm: 工业级打印机 Industrial-grade printers
- * 
- * 性能阈值设计 Performance Threshold Design:
- * 
- * 积木数量性能影响 Brick Count Performance Impact:
- * - 1-4个积木: 优秀性能 Excellent performance (<1秒渲染 <1s render)
- * - 5-9个积木: 良好性能 Good performance (1-5秒渲染 1-5s render)
- * - 10-16个积木: 中等性能 Moderate performance (5-15秒渲染 5-15s render)
- * - 17-25个积木: 较慢性能 Slow performance (15-60秒渲染 15-60s render)
- * 
- * 尺寸复杂度影响 Size Complexity Impact:
- * - 总尺寸<100mm: 简单处理 Simple processing
- * - 总尺寸100-200mm: 中等复杂度 Moderate complexity
- * - 总尺寸200-300mm: 高复杂度 High complexity
- * - 总尺寸>300mm: 极高复杂度 Very high complexity
- */
+
+
 module validate_tiling_size(total_x, total_y, grid_x, grid_y, tile_units, brick_width, brick_length) {
     // 参数验证 - Parameter validation
     assert(total_x > 0, "total_x must be > 0");
@@ -606,8 +493,6 @@ module validate_tiling_size(total_x, total_y, grid_x, grid_y, tile_units, brick_
         echo(str("  • 或者调整tile_units数量以改善比例"));
         echo(str("    Or adjust tile_units count to improve ratio"));
     }
-    
-    echo("========================================================");
 }
 
 // 简化的尺寸验证函数（向后兼容）
@@ -680,7 +565,6 @@ module validate_irregular_tiling_size(total_x, total_y, row_config, tile_units, 
     echo("  • 更紧凑的长宽比 More compact aspect ratio");
     echo("  • 更好的打印床利用率 Better print bed utilization");
     
-    echo("========================================================");
 }
 
 // 打印床兼容性检查函数
@@ -848,9 +732,7 @@ if (tile_units > 1) {
     BedCompatible = check_bed_compatibility(TotalSize[0], TotalSize[1]);
     echo(str("标准打印床兼容 Standard Bed Compatible: ", BedCompatible ? "是 Yes" : "否 No"));
     
-    echo("=====================================");
 }
-echo("==========================================");
 
 // 合理性警告 - Reasonableness warnings
 if (width > 10 || length > 10) {
@@ -870,28 +752,7 @@ if (CLEARANCESize > 0.5) {
 
 // 单个积木生成模块 - Single Brick Generation Module
 
-/*
- * 单个乐高积木生成模块 - Single LEGO Brick Generation Module
- * 
- * 功能：生成单个LEGO积木，包含所有标准组件
- * Function: Generate single LEGO brick with all standard components
- * 
- * 参数 Parameters:
- * - brick_width: 积木宽度（单位数量）- Brick width in units
- * - brick_length: 积木长度（单位数量）- Brick length in units  
- * - brick_height: 积木高度（层数）- Brick height in layers
- * 
- * 组件 Components:
- * - 外壳薄壳结构 - Exterior shell structure
- * - 顶部凸点阵列 - Top studs array
- * - 底部管道结构 - Bottom tubes structure
- * 
- * 特性 Features:
- * - 完全兼容LEGO标准 - Fully LEGO compatible
- * - 3D打印优化 - 3D printing optimized
- * - 可重复调用 - Reusable and callable multiple times
- * - 无副作用 - No side effects
- */
+
 module single_lego_brick(brick_width, brick_length, brick_height) {
     // 参数验证 - Parameter validation
     assert(brick_width > 0, "brick_width must be > 0");
@@ -1011,7 +872,6 @@ module single_tube_with_height(tube_height) {
     }
 }
 
-// ========================================
 // 主平铺渲染逻辑 - Main Tiling Rendering Logic
 module generate_tiling() {
     assert(tile_units >= 1, "tile_units must be >= 1");
@@ -1024,7 +884,6 @@ module generate_tiling() {
         echo("=== 单个积木模式 Single Brick Mode ===");
         echo(str("积木规格 Brick Spec: ", width, "×", length, "×", height, " 单位 units"));
         echo(str("积木尺寸 Brick Size: ", width * UnitSize, "×", length * UnitSize, "×", height * LayerSize, "mm"));
-        echo("========================================");
         
         single_lego_brick(width, length, height);
         
@@ -1100,7 +959,6 @@ module generate_tiling() {
         
         echo(str("平铺生成完成 Tiling generation completed: ", len(brick_positions), " 个积木 bricks"));
         echo(str("所有积木规格一致 All bricks uniform spec: ", width, "×", length, "×", height, " 单位 units"));
-        echo("========================================");
     }
 }
 
@@ -1110,13 +968,7 @@ module generate_tiling() {
 // 使用新的generate_tiling模块根据tile_units选择渲染模式 - Use new generate_tiling module to select rendering mode based on tile_units
 generate_tiling();
 
-// ========================================
 // 模块定义 - Module Definitions
-// ========================================
-
-// ========================================
-// 原有模块定义（向后兼容）- Original Module Definitions (Backward Compatibility)
-// ========================================
 
 // 外壳薄壳结构模块 - Exterior shell structure module
 // 保持向后兼容，内部调用新的单个积木模块 - Maintain backward compatibility, internally calls new single brick module
@@ -1147,20 +999,5 @@ module single_tube() {
     single_tube_with_height(TubeHeight);
 }
 
-// ========================================
-// 使用示例 - Usage Examples
-// ========================================
 
-/*
- * 基本使用示例 - Basic Usage Examples
- * 
- * 单个积木 Single Brick:
- * width = 2; length = 4; height = 3; tile_units = 1;
- * 
- * 平铺积木 Tiling Bricks:
- * width = 2; length = 2; height = 3; tile_units = 9;  // 3×3排列
- * width = 16; length = 2; height = 3; tile_units = 4; // 智能排列
- * 
- * 详细使用说明请参考README.md文件
- * For detailed usage instructions, please refer to README.md
- */
+
