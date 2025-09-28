@@ -15,10 +15,15 @@ StandardLEGOBlock/
     │   ├── product.md              # Product overview and features
     │   ├── tech.md                 # Technology stack and commands
     │   └── structure.md            # This file - project organization
-    └── specs/lego-basic-module/    # Detailed project specifications
-        ├── requirements.md         # User stories and acceptance criteria
-        ├── design.md              # Technical architecture and design
-        └── tasks.md               # Implementation checklist
+    └── specs/                      # Project specifications
+        ├── lego-basic-module/      # Core LEGO brick generator
+        │   ├── requirements.md     # User stories and acceptance criteria
+        │   ├── design.md          # Technical architecture and design
+        │   └── tasks.md           # Implementation checklist
+        └── lego-tiling-generator/  # Advanced tiling system
+            ├── requirements.md     # User stories and acceptance criteria
+            ├── design.md          # Technical architecture and design
+            └── tasks.md           # Implementation checklist
 ```
 
 ## File Conventions

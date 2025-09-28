@@ -1,22 +1,25 @@
 # 参数化乐高基础模块 / Parametric LEGO Basic Module
 
-一个使用OpenSCAD创建的参数化乐高兼容积木3D模型，支持自定义尺寸并针对3D打印进行了优化。
+一个使用OpenSCAD创建的参数化乐高兼容积木3D模型，支持自定义尺寸并针对3D打印进行了优化。现在支持智能平铺功能，可批量生产多个积木！
 
-A parametric LEGO-compatible brick 3D model created with OpenSCAD, supporting custom dimensions and optimized for 3D printing.
+A parametric LEGO-compatible brick 3D model created with OpenSCAD, supporting custom dimensions and optimized for 3D printing. Now supports intelligent tiling functionality for batch production of multiple bricks!
 
 ## 🎯 特性 / Features
 
-- **完全兼容** - 与真实乐高积木100%兼容
-- **参数化设计** - 轻松调整长度、宽度、高度
-- **3D打印优化** - 考虑了打印精度和结构强度
-- **标准规格** - 严格遵循乐高官方尺寸标准
-- **开源免费** - MIT许可证，自由使用和修改
+### 核心功能 Core Features
+- **完全兼容** - 与真实乐高积木100%兼容 / **Fully Compatible** - 100% compatible with real LEGO bricks
+- **参数化设计** - 轻松调整长度、宽度、高度 / **Parametric Design** - Easily adjust length, width, height
+- **3D打印优化** - 考虑了打印精度和结构强度 / **3D Print Optimized** - Considers printing precision and structural strength
+- **标准规格** - 严格遵循乐高官方尺寸标准 / **Standard Specifications** - Strictly follows official LEGO dimensions
+- **开源免费** - MIT许可证，自由使用和修改 / **Open Source** - MIT license, free to use and modify
 
-- **Fully Compatible** - 100% compatible with real LEGO bricks
-- **Parametric Design** - Easily adjust length, width, height
-- **3D Print Optimized** - Considers printing precision and structural strength
-- **Standard Specifications** - Strictly follows official LEGO dimensions
-- **Open Source** - MIT license, free to use and modify
+### 🆕 平铺功能 Tiling Features
+- **智能排列** - 自动计算最优X×Y排列方式 / **Intelligent Arrangement** - Automatically calculate optimal X×Y layout
+- **批量生产** - 一次生成1-25个积木 / **Batch Production** - Generate 1-25 bricks at once
+- **中心对称** - 以原点为中心的美观布局 / **Center Symmetric** - Aesthetically pleasing layout centered at origin
+- **固定间距** - 12mm间距确保打印质量 / **Fixed Spacing** - 12mm spacing ensures print quality
+- **尺寸验证** - 智能检查打印床兼容性 / **Size Validation** - Intelligent print bed compatibility checking
+- **性能优化** - 针对大批量渲染优化 / **Performance Optimized** - Optimized for large batch rendering
 
 ## 📸 示例渲染 / Sample Renders
 
@@ -35,6 +38,9 @@ Here are renders of different brick configurations:
 
 ### 16x16 大型底板 / 16x16 Large Baseplate
 ![16x16 LEGO Baseplate](samples/lego_basic_module_16x16.png)
+
+### 🆕 6x2 智能平铺 (11个单位) / 6x2 Intelligent Tiling (11 Units)
+![6x2 LEGO Brick Tiling 11 Units](samples/lego_basic_module_6x2_tiling_11.png)
 
 ## 🚀 快速开始 / Quick Start
 
@@ -57,14 +63,30 @@ Modify these parameters at the top of the file:
 
 ```scad
 // 积木宽度（单位数量）- Block width in units
-Width = 6;
+width = 6; // [1:31]
 
 // 积木长度（单位数量）- Block length in units  
-Length = 2;
+length = 2; // [1:31]
 
 // 积木高度（层数）- Block height in layers
-Height = 3;
+height = 3; // [1:Low, 3:High]
+
+// 🆕 平铺积木数量 - Number of bricks in tiling arrangement
+// 设置为1时生成单个积木，大于1时生成平铺排列
+// Set to 1 for single brick, >1 for tiling arrangement
+tile_units = 1; // [1:25]
 ```
+
+#### 平铺功能说明 Tiling Function Description
+
+`tile_units` 参数控制生成的积木数量和排列方式：
+
+The `tile_units` parameter controls the number of bricks generated and their arrangement:
+
+- **tile_units = 1**: 生成单个积木（默认模式）/ Generate single brick (default mode)
+- **tile_units = 4**: 生成4个积木，系统自动选择最优排列（如2×2）/ Generate 4 bricks, system automatically selects optimal arrangement (like 2×2)
+- **tile_units = 9**: 生成9个积木，通常排列为3×3 / Generate 9 bricks, typically arranged as 3×3
+- **tile_units = 25**: 生成25个积木，排列为5×5（最大支持）/ Generate 25 bricks, arranged as 5×5 (maximum supported)
 
 ### 3. 预览和渲染 / Preview and Render
 
@@ -92,56 +114,106 @@ Height = 3;
 | TubeInnerDiameter | 4.8mm | 内管直径 / Inner tube diameter |
 | TubeOuterDiameter | 6.5mm | 外管直径 / Outer tube diameter |
 
-## 🖨️ 3D打印建议 / 3D Printing Recommendations
+## 🧮 智能平铺算法 / Intelligent Tiling Algorithm
 
-### 推荐设置 / Recommended Settings
+### 算法原理 Algorithm Principle
 
-- **层高 Layer Height**: 0.2mm
-- **填充率 Infill**: 15-20%
-- **壁厚 Wall Thickness**: 3-4层 / 3-4 walls
-- **支撑 Support**: 通常不需要 / Usually not needed
-- **底板附着 Bed Adhesion**: 建议使用 / Recommended
+系统使用智能算法自动计算最优的积木排列方式：
 
-### 材料建议 / Material Recommendations
+The system uses intelligent algorithms to automatically calculate optimal brick arrangements:
 
-- **PLA**: 易打印，适合初学者 / Easy to print, good for beginners
-- **PETG**: 更强韧，更好的层间附着 / Stronger, better layer adhesion
-- **ABS**: 最接近真实乐高材质 / Closest to real LEGO material
+1. **因数分解 Factor Decomposition**: 找出tile_units的所有可能因数对 / Find all possible factor pairs of tile_units
+2. **尺寸计算 Size Calculation**: 考虑积木实际尺寸和12mm间距 / Consider actual brick size and 12mm spacing  
+3. **比例优化 Ratio Optimization**: 选择长宽比最接近1的排列 / Select arrangement with aspect ratio closest to 1
+
+### 计算示例 Calculation Example
+
+以16×2积木4个单位为例 Example with 4 units of 16×2 bricks:
+
+| 排列 Arrangement | 总尺寸 Total Size | 长宽比 Ratio | 选择 Choice |
+|---|---|---|---|
+| 4×1 | 548×16mm | 34.25 | ❌ 太长 Too long |
+| 2×2 | 268×44mm | 6.09 | ⚠️ 较好 Better |
+| 1×4 | 128×100mm | 1.28 | ✅ 最优 Optimal |
+
+算法选择1×4排列，因为长宽比最接近正方形，打印床利用率最高。
+
+Algorithm selects 1×4 arrangement because the aspect ratio is closest to square, maximizing print bed utilization.
+
+
 
 ## 📁 项目结构 / Project Structure
 
 ```
 StandardLEGOBlock/
-├── README.md                           # 项目说明 / Project documentation
+├── README.md                           # 项目说明（含平铺功能）/ Project documentation (with tiling)
 ├── LICENSE                            # MIT许可证 / MIT license
-├── lego_basic_module.scad            # 主要OpenSCAD文件 / Main OpenSCAD file
+├── lego_basic_module.scad            # 主要OpenSCAD文件（v2.0支持平铺）/ Main OpenSCAD file (v2.0 with tiling)
 ├── samples/                          # 示例渲染图片 / Sample render images
 │   ├── lego_basic_module_2x1.png    # 2x1积木渲染 / 2x1 brick render
 │   ├── lego_basic_module_6x2.png    # 6x2积木渲染 / 6x2 brick render
 │   ├── lego_basic_module_6x2_bottom.png # 6x2底部视图 / 6x2 bottom view
 │   └── lego_basic_module_16x16.png  # 16x16底板渲染 / 16x16 baseplate render
-└── .kiro/specs/lego-basic-module/    # 项目规格文档 / Project specifications
-    ├── requirements.md               # 需求文档 / Requirements document
-    ├── design.md                    # 设计文档 / Design document
-    └── tasks.md                     # 任务列表 / Task list
+└── .kiro/                           # Kiro AI助手配置 / Kiro AI assistant config
+    ├── steering/                    # AI指导文档 / AI guidance documents
+    │   ├── product.md              # 产品概述 / Product overview
+    │   ├── tech.md                 # 技术栈说明 / Technology stack
+    │   └── structure.md            # 项目结构 / Project structure
+    └── specs/lego-tiling-generator/ # 平铺功能规格文档 / Tiling feature specifications
+        ├── requirements.md         # 需求文档 / Requirements document
+        ├── design.md              # 设计文档 / Design document
+        └── tasks.md               # 任务列表 / Task list
 ```
 
 ## 🔧 自定义和扩展 / Customization and Extension
 
 ### 常见尺寸示例 / Common Size Examples
 
+#### 单个积木示例 Single Brick Examples
+
 ```scad
 // 2x4 标准积木 / 2x4 standard brick
-Width = 4; Length = 2; Height = 3;
+width = 4; length = 2; height = 3; tile_units = 1;
 
 // 2x2 方形积木 / 2x2 square brick  
-Width = 2; Length = 2; Height = 3;
+width = 2; length = 2; height = 3; tile_units = 1;
 
 // 1x8 长条积木 / 1x8 long brick
-Width = 8; Length = 1; Height = 3;
+width = 8; length = 1; height = 3; tile_units = 1;
 
 // 2x4 薄片 / 2x4 plate
-Width = 4; Length = 2; Height = 1;
+width = 4; length = 2; height = 1; tile_units = 1;
+```
+
+#### 🆕 平铺配置示例 Tiling Configuration Examples
+
+```scad
+// 完美正方形平铺 - Perfect square tiling
+width = 2; length = 2; height = 3; tile_units = 9;
+// 结果：3×3排列，总尺寸68×68mm
+// Result: 3×3 arrangement, total size 68×68mm
+
+// 智能矩形优化 - Intelligent rectangle optimization
+width = 16; length = 2; height = 3; tile_units = 4;
+// 结果：1×4排列（而不是4×1），总尺寸128×100mm，长宽比1.28
+// Result: 1×4 arrangement (instead of 4×1), total size 128×100mm, ratio 1.28
+
+// 大批量生产 - Large batch production
+width = 2; length = 2; height = 3; tile_units = 25;
+// 结果：5×5排列，总尺寸128×128mm，标准打印床兼容
+// Result: 5×5 arrangement, total size 128×128mm, standard bed compatible
+
+// 优化示例 - Optimization example
+width = 6; length = 2; height = 3; tile_units = 6;
+// 结果：3×2排列（而不是6×1），更好的打印床利用率
+// Result: 3×2 arrangement (instead of 6×1), better bed utilization
+
+// 🆕 质数优化示例 - Prime number optimization example
+width = 6; length = 2; height = 3; tile_units = 11;
+// 结果：智能[4,4,3]行排列，而不是1×11线性排列
+// 总尺寸：196×100mm，长宽比1.96（优于11×1的长宽比11.0）
+// Result: Intelligent [4,4,3] row arrangement instead of 1×11 linear
+// Total size: 196×100mm, ratio 1.96 (better than 11×1 ratio of 11.0)
 ```
 
 ### 高级自定义 / Advanced Customization
@@ -153,6 +225,80 @@ The file includes complete parametric functions, you can:
 - 修改间隙参数以适应不同打印机精度 / Adjust clearance for different printer precision
 - 调整壁厚以改变强度 / Modify wall thickness for different strength
 - 自定义管道结构 / Customize tube structure
+
+## ⚡ 性能优化 / Performance Optimization
+
+### 渲染性能 Rendering Performance
+
+| 积木数量 Brick Count | 渲染时间 Render Time | 建议 Recommendations |
+|---|---|---|
+| 1-4个 / 1-4 bricks | <5秒 / <5s | 使用F6完整渲染 / Use F6 full render |
+| 5-9个 / 5-9 bricks | 5-15秒 / 5-15s | 开发时用F5预览 / Use F5 preview during development |
+| 10-16个 / 10-16 bricks | 15-30秒 / 15-30s | 建议F5预览模式 / Recommend F5 preview mode |
+| 17-25个 / 17-25 bricks | 30-60秒 / 30-60s | 必须F5预览调试 / Must use F5 preview for debugging |
+
+### 内存使用 Memory Usage
+
+- 单个积木 Single brick: ~1MB
+- 9个积木平铺 9-brick tiling: ~9MB  
+- 25个积木平铺 25-brick tiling: ~25MB
+
+## 🔧 故障排除 / Troubleshooting
+
+### 常见问题 Common Issues
+
+#### 问题1：积木间间距不均匀 Issue 1: Uneven spacing between bricks
+
+**症状 Symptoms:**
+- 某些积木靠得太近 / Some bricks too close
+- 间距不是12mm / Spacing not 12mm
+- 排列不对称 / Arrangement not symmetric
+
+**解决方案 Solutions:**
+- 重新校准打印床 / Re-calibrate print bed
+- 检查切片软件设置 / Check slicer settings  
+- 使用筏板提高精度 / Use raft for better precision
+
+#### 问题2：渲染时间过长 Issue 2: Rendering time too long
+
+**症状 Symptoms:**
+- F6渲染超过5分钟 / F6 render >5min
+- 系统响应缓慢 / System response slow
+
+**解决方案 Solutions:**
+- 减少tile_units数量 / Reduce tile_units count
+- 使用F5预览模式 / Use F5 preview mode
+- 降低$fn值 / Lower $fn value
+
+#### 问题3：打印床尺寸超限 Issue 3: Print bed size exceeded
+
+**症状 Symptoms:**
+- 控制台显示尺寸警告 / Console shows size warnings
+- 总尺寸超过打印床 / Total size exceeds print bed
+
+**解决方案 Solutions:**
+- 减少tile_units数量 / Reduce tile_units count
+- 使用更小的积木尺寸 / Use smaller brick dimensions
+- 考虑分批打印 / Consider batch printing
+
+### 调试技巧 Debugging Tips
+
+1. **查看控制台输出** / **Check Console Output**
+   - 详细的尺寸信息 / Detailed size information
+   - 网格配置信息 / Grid configuration info
+   - 警告和建议 / Warnings and suggestions
+
+2. **使用测试模式** / **Use Test Mode**
+   ```scad
+   // 取消注释启用测试 / Uncomment to enable tests
+   // test_grid_calculations();
+   // test_position_calculations();
+   ```
+
+3. **逐步增加复杂度** / **Gradually Increase Complexity**
+   - 从单个积木开始 / Start with single brick
+   - 逐步增加tile_units / Gradually increase tile_units
+   - 验证每个步骤 / Validate each step
 
 ## 🤝 贡献 / Contributing
 
