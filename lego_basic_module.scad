@@ -1,233 +1,86 @@
 /*
  * 参数化乐高基础模块 - Parametric LEGO Basic Module
  * 
- * 本文件生成符合乐高官方规格的3D可打印积木模型
- * 支持自定义尺寸参数，并针对3D打印进行了优化
- * 
- * 功能特性 - Features:
- * - 单个积木生成：设置tile_units=1生成单个积木
- * - 平铺排列生成：设置tile_units>1生成多个积木的平铺排列
- * - 智能布局：自动计算最优的X×Y排列方式
- * - 固定间距：使用12mm固定间距确保打印质量
- * - 模块化设计：single_lego_brick()模块可重复调用生成积木
- * - 向后兼容：保持所有原有模块和功能不变
- * 
- * 使用方法 - Usage:
- * 1. 修改下方的用户参数（width, length, height, tile_units）
- * 2. 按F5预览模型，按F6渲染完整模型
- * 3. 导出STL文件用于3D打印
- * 4. 在其他项目中调用single_lego_brick(width, length, height)生成积木
- * 
- * 平铺示例 - Tiling Examples:
- * - tile_units=1: 单个积木 (Single brick)
- * - tile_units=4: 2×2排列 (2×2 arrangement)
- * - tile_units=9: 3×3排列 (3×3 arrangement)
- * - tile_units=6: 3×2排列 (3×2 arrangement)
- * 
- * 兼容性：与真实乐高积木完全兼容
- * 打印建议：建议使用0.2mm层高，15-20%填充率
- * 详细文档：请参考README.md获取完整使用说明
+ * 生成符合乐高官方规格的3D可打印积木模型
+ * 支持单个积木和智能平铺排列
  */
 
 /* [Parameters] */
 
-// 积木宽度（单位数量）- Block width in units
-width = 6; // [1:31]
-
-// 积木长度（单位数量）- Block length in units  
-length = 2; // [1:31]
-
-// 积木高度（层数）- Block height in layers
-height = 3; // [1:Low, 3:High]
-
-// 平铺积木数量 - Number of bricks in tiling arrangement
-// 设置为1时生成单个积木，大于1时生成平铺排列
-// 系统根据积木实际尺寸(width×length)智能计算最优X×Y排列方式
-// 算法目标：使整体平铺尺寸尽可能接近正方形，提高打印床利用率
-// 示例：16×2积木4个单位→2×2排列；2×2积木9个单位→3×3排列
-// 积木间使用12mm固定间距，以坐标原点为中心对称排列
-// Set to 1 for single brick, >1 for tiling arrangement  
-// System intelligently calculates optimal X×Y layout based on actual brick size (width×length)
-// Algorithm goal: make overall tiling dimensions as close to square as possible
-// Examples: 4 units of 16×2 bricks→2×2 layout; 9 units of 2×2 bricks→3×3 layout
-// Uses 12mm fixed spacing, centered symmetrically around origin
-tile_units = 11; // [1:25]
+width = 6; // [1:31] 积木宽度 - Block width in units
+length = 2; // [1:31] 积木长度 - Block length in units  
+height = 3; // [1:Low, 3:High] 积木高度 - Block height in layers
+tile_units = 11; // [1:25] 平铺数量 - Number of bricks (1=single, >1=tiling)
 
 /* [Hidden] */
 
-// 设置圆形分辨率 - Set circular resolution
 $fn = 96;
 
-// ========================================
 // 乐高标准规格常量 - LEGO Standard Specifications
-// ========================================
+LayerSize = 3.2;        // 每层高度 - Height per layer
+UnitSize = 8;           // 单位尺寸 - Unit size (8x8mm grid)
+StudDiameter = 4.8;     // 凸点直径 - Stud diameter
+StudHeight = 1.8;       // 凸点高度 - Stud height
+StudMargin = UnitSize / 2;
+TubeInnerDiameter = 4.8;  // 内管直径 - Inner tube diameter
+TubeOuterDiameter = 6.5;  // 外管直径 - Outer tube diameter  
+TubeMargin = UnitSize;
+CLEARANCESize = 0.2;    // 间隙尺寸 - Clearance for tight fit
+WallThickness = 1.6;    // 壁厚 - Wall thickness
+TileSpacing = 12;       // 平铺间距 - Spacing between bricks
 
-// 基础尺寸规格 - Basic Dimensions
-LayerSize = 3.2;        // 每层高度 (mm) - Height per layer
-UnitSize = 8;           // 单位尺寸 (mm) - Unit size (8x8mm grid)
 
-// 凸点规格 - Stud Specifications  
-StudDiameter = 4.8;     // 凸点直径 (mm) - Stud diameter
-StudHeight = 1.8;       // 凸点高度 (mm) - Stud height
-StudMargin = UnitSize / 2;         // 凸点边距 (mm) - Stud margin from center
-
-// 内部管道规格 - Internal Tube Specifications
-TubeInnerDiameter = 4.8;  // 内管直径 (mm) - Inner tube diameter
-TubeOuterDiameter = 6.5;  // 外管直径 (mm) - Outer tube diameter  
-TubeMargin = UnitSize;         // 管道边距 (mm) - Tube margin from center
-
-// 3D打印优化参数 - 3D Printing Optimization
-CLEARANCESize = 0.2;    // 间隙尺寸 (mm) - Clearance for tight fit
-WallThickness = 1.6;    // 壁厚 (mm) - Wall thickness for strength
-
-// 平铺功能参数 - Tiling Function Parameters
-TileSpacing = 12;       // 平铺间距 (mm) - Fixed spacing between bricks in tiling
-                        // 12mm间距确保足够空间用于打印质量和后处理
-                        // 12mm spacing ensures adequate space for print quality and post-processing
-                        
-/*
- * 平铺间距设计说明 - Tiling Spacing Design Explanation
- * 
- * 为什么选择12mm固定间距？ Why choose 12mm fixed spacing?
- * 
- * 1. 打印质量考虑 Print Quality Considerations:
- *    - 足够空间避免积木间粘连 Adequate space to avoid brick adhesion
- *    - 便于支撑材料移除 Easy support material removal
- *    - 减少打印缺陷传播 Reduce print defect propagation
- * 
- * 2. 后处理便利性 Post-Processing Convenience:
- *    - 工具访问空间充足 Sufficient tool access space
- *    - 清理和修整容易 Easy cleaning and trimming
- *    - 质量检查方便 Convenient quality inspection
- * 
- * 3. 材料节省平衡 Material Saving Balance:
- *    - 避免过大间距浪费材料 Avoid excessive spacing waste
- *    - 确保最小安全距离 Ensure minimum safe distance
- *    - 优化打印床利用率 Optimize print bed utilization
- * 
- * 4. 通用性考虑 Universal Considerations:
- *    - 适用于不同积木尺寸 Suitable for different brick sizes
- *    - 兼容各种打印机设置 Compatible with various printer settings
- *    - 符合行业最佳实践 Follows industry best practices
- */
-
-// ========================================
 // 尺寸计算函数 - Size Calculation Functions
-// ========================================
-
-// 计算外壳尺寸的函数（考虑间隙调整）
-// Calculate exterior shell dimensions with clearance adjustments
 function calculate_outer_dimensions(width, length, height, unit_size, clearance) = [
-    width * unit_size - clearance,   // 外部宽度 - Outer width
-    length * unit_size - clearance,  // 外部长度 - Outer length  
-    height * LayerSize               // 外部高度 - Outer height
+    width * unit_size - clearance,
+    length * unit_size - clearance,
+    height * LayerSize
 ];
 
-// 计算内部空腔尺寸的函数（薄壳结构）
-// Calculate interior cavity dimensions for thin-wall structure
 function calculate_inner_dimensions(outer_dims, wall_thickness) = [
-    outer_dims[0] - 2 * wall_thickness,  // 内部宽度 - Inner width
-    outer_dims[1] - 2 * wall_thickness,  // 内部长度 - Inner length
-    outer_dims[2] - wall_thickness       // 内部高度 - Inner height (顶面封闭，底面开放)
+    outer_dims[0] - 2 * wall_thickness,
+    outer_dims[1] - 2 * wall_thickness,
+    outer_dims[2] - wall_thickness
 ];
 
-// 计算凸点位置的函数（Width × Length阵列）
-// Calculate stud positions for Width × Length array
 function calculate_stud_positions(width, length, unit_size) = [
     for (i = [0:width-1])
         for (j = [0:length-1])
             [
-                (i - (width-1)/2) * unit_size,   // X位置 - X position
-                (j - (length-1)/2) * unit_size,  // Y位置 - Y position
-                0                                // Z位置 - Z position (顶面)
+                (i - (width-1)/2) * unit_size,
+                (j - (length-1)/2) * unit_size,
+                0
             ]
 ];
 
-// 计算管道位置的函数（基于主体方块网格）
-// Calculate tube positions based on main block grid
 function calculate_tube_positions(width, length, tube_margin) = 
     (width > 1 && length > 1) ? [
-        for (i = [0:width-2])  // width-1 个管道
-            for (j = [0:length-2])  // length-1 个管道
+        for (i = [0:width-2])
+            for (j = [0:length-2])
                 [
-                    (i - (width-2)/2) * tube_margin,   // X位置 - X position
-                    (j - (length-2)/2) * tube_margin,  // Y位置 - Y position
-                    0                                  // Z位置 - Z position (底面)
+                    (i - (width-2)/2) * tube_margin,
+                    (j - (length-2)/2) * tube_margin,
+                    0
                 ]
     ] : [];
 
-// 应用间隙调整的函数
-// Apply clearance adjustments function
 function apply_clearance_adjustment(value, clearance, adjustment_type = "full") = 
     adjustment_type == "full" ? value - clearance :
     adjustment_type == "half" ? value - clearance/2 :
     value;
 
-// 参数验证函数
-// Parameter validation function
 function validate_parameters(width, length, height) = 
     width > 0 && length > 0 && height > 0;
 
-// 计算凸点数量
-// Calculate stud count
 function calculate_stud_count(width, length) = width * length;
 
-// 计算管道数量（只有当width>1且length>1时才有管道）
-// Calculate tube count (only when width>1 and length>1)
 function calculate_tube_count(width, length, height) = 
     (width > 1 && length > 1) ? (width - 1) * (length - 1) : 0;
 
-// 计算管道高度
-// Calculate tube height
 function calculate_tube_height(height, layer_size) = 
     layer_size * height;
 
-// ========================================
 // 平铺网格计算函数 - Tiling Grid Calculation Functions
-// ========================================
-
-/*
- * 智能网格计算算法说明 - Intelligent Grid Calculation Algorithm Description
- * 
- * 目标：根据积木数量(tile_units)和积木实际尺寸，计算最优的X×Y排列方式
- * Goal: Calculate optimal X×Y arrangement based on brick count and actual brick dimensions
- * 
- * 算法步骤 - Algorithm Steps:
- * 1. 找出tile_units的所有因数对 - Find all factor pairs of tile_units
- * 2. 对每个因数对，计算总体尺寸（包含12mm间距）- Calculate total dimensions for each pair (including 12mm spacing)
- * 3. 计算每种排列的长宽比 - Calculate aspect ratio for each arrangement
- * 4. 选择长宽比最接近1的排列（最接近正方形）- Select arrangement with ratio closest to 1 (closest to square)
- * 
- * 示例 - Examples:
- * - 16×2积木4个单位 → 选择1×4排列（比例1.28）而不是4×1排列（比例34.25）
- * - 2×2积木9个单位 → 选择3×3排列（比例1.0）
- * - 8×1积木6个单位 → 选择3×2排列而不是6×1或1×6排列
- * 
- * 优势 - Benefits:
- * - 最大化打印床利用率 - Maximize print bed utilization
- * - 减少材料浪费 - Reduce material waste  
- * - 提高打印成功率 - Improve print success rate
- */
-
-// ========================================
-// 改进的平铺布局计算 - Improved Tiling Layout Calculation
-// ========================================
-
-/*
- * 改进的平铺布局计算说明 - Improved Tiling Layout Calculation Description
- * 
- * 新功能 New Features:
- * 1. 支持不规则排列 - Support irregular arrangements
- * 2. 质数优化 - Prime number optimization  
- * 3. 更好的长宽比 - Better aspect ratios
- * 
- * 示例改进 Example Improvements:
- * - 7个积木: 从1×7 (比例10) 改进为 3+4两行 (比例≈1.5)
- * - 11个积木: 从1×11 (比例很大) 改进为 5+6两行 (比例≈2)
- * - 13个积木: 从1×13 改进为 4+4+5三行
- */
-
-// 计算最优平铺布局的主函数 - Main function to calculate optimal tiling layout
 function calculate_optimal_layout(tile_units, brick_width, brick_length) = 
     assert(tile_units >= 1, "tile_units must be >= 1")
     assert(brick_width >= 1, "brick_width must be >= 1") 
@@ -237,23 +90,15 @@ function calculate_optimal_layout(tile_units, brick_width, brick_length) =
     let(
         brick_size_x = brick_width * UnitSize,
         brick_size_y = brick_length * UnitSize,
-        
-        // 尝试规则网格排列
         regular_result = find_optimal_regular_grid(tile_units, brick_size_x, brick_size_y),
         regular_layout = regular_result[0],
         regular_ratio = regular_result[1],
-        
-        // 尝试不规则排列（对质数和某些合数更优）
         irregular_result = find_optimal_irregular_layout(tile_units, brick_size_x, brick_size_y),
         irregular_layout = irregular_result[0],
         irregular_ratio = irregular_result[1],
-        
-        // 选择更优的排列方式
         best_layout = irregular_ratio < regular_ratio ? irregular_layout : regular_layout
     )
     best_layout;
-
-// 规则网格计算（原有算法，保持兼容性）
 function find_optimal_regular_grid(n, size_x, size_y) = 
     let(
         all_factors = [for (i = [1 : n]) if (n % i == 0) [i, n/i]],
@@ -269,19 +114,12 @@ function find_optimal_regular_grid(n, size_x, size_y) =
         best_factors = [for (r = ratios) if (r[1] == best_ratio) r[0]][0]
     )
     [["regular", best_factors], best_ratio];
-
-// 不规则排列计算（新增算法）
 function find_optimal_irregular_layout(n, size_x, size_y) = 
     let(
-        // 尝试不同行数的配置
         layouts_2_rows = generate_2_row_layouts(n, size_x, size_y),
         layouts_3_rows = n >= 6 ? generate_3_row_layouts(n, size_x, size_y) : [],
         layouts_4_rows = n >= 10 ? generate_4_row_layouts(n, size_x, size_y) : [],
-        
-        // 合并所有不规则排列选项
         all_irregular = concat(layouts_2_rows, layouts_3_rows, layouts_4_rows),
-        
-        // 找到最优的不规则排列
         best_irregular = len(all_irregular) > 0 ? 
             let(
                 ratios = [for (layout = all_irregular) layout[1]],
@@ -291,8 +129,6 @@ function find_optimal_irregular_layout(n, size_x, size_y) =
             best_layout : [["regular", [1, n]], 999]
     )
     best_irregular;
-
-// 生成2行排列的所有可能配置
 function generate_2_row_layouts(n, size_x, size_y) = 
     let(
         max_first_row = floor(n/2),
@@ -309,8 +145,6 @@ function generate_2_row_layouts(n, size_x, size_y) =
         ]
     )
     layouts;
-
-// 生成3行排列的配置
 function generate_3_row_layouts(n, size_x, size_y) = 
     let(
         base_per_row = floor(n / 3),
@@ -318,7 +152,6 @@ function generate_3_row_layouts(n, size_x, size_y) =
         row1 = base_per_row + (remainder >= 1 ? 1 : 0),
         row2 = base_per_row + (remainder >= 2 ? 1 : 0),
         row3 = base_per_row,
-        
         max_row_width = max(row1, max(row2, row3)),
         total_x = max_row_width * size_x + (max_row_width - 1) * TileSpacing,
         total_y = 3 * size_y + 2 * TileSpacing,
@@ -326,8 +159,6 @@ function generate_3_row_layouts(n, size_x, size_y) =
         layout_config = ["irregular", [row1, row2, row3]]
     )
     [[layout_config, ratio]];
-
-// 生成4行排列的配置
 function generate_4_row_layouts(n, size_x, size_y) = 
     let(
         base_per_row = floor(n / 4),
@@ -336,7 +167,6 @@ function generate_4_row_layouts(n, size_x, size_y) =
         row2 = base_per_row + (remainder >= 2 ? 1 : 0),
         row3 = base_per_row + (remainder >= 3 ? 1 : 0),
         row4 = base_per_row,
-        
         max_row_width = max(row1, max(row2, max(row3, row4))),
         total_x = max_row_width * size_x + (max_row_width - 1) * TileSpacing,
         total_y = 4 * size_y + 3 * TileSpacing,
@@ -344,15 +174,11 @@ function generate_4_row_layouts(n, size_x, size_y) =
         layout_config = ["irregular", [row1, row2, row3, row4]]
     )
     [[layout_config, ratio]];
-
-// 兼容性函数：保持原有接口
 function calculate_grid_dimensions(tile_units, brick_width, brick_length) = 
     let(
         layout = calculate_optimal_layout(tile_units, brick_width, brick_length)
     )
     layout[0] == "regular" ? layout[1] : 
-    // 对于不规则排列，返回等效的网格尺寸用于兼容性
-    // For irregular layouts, return equivalent grid dimensions for compatibility
     let(
         row_config = layout[1],
         max_row_width = max(row_config),
@@ -360,94 +186,26 @@ function calculate_grid_dimensions(tile_units, brick_width, brick_length) =
     )
     [max_row_width, row_count];
 
-/*
- * 寻找最优因数分解的函数 - Function to find optimal factor decomposition
- * 
- * 功能描述 Function Description:
- * 这是平铺算法的核心函数，负责计算使总体尺寸最接近正方形的因数分解。
- * 算法通过遍历所有可能的因数对，计算每种排列的长宽比，选择最优解。
- * 
- * This is the core function of the tiling algorithm, responsible for calculating 
- * factor decomposition that makes overall dimensions closest to square.
- * The algorithm traverses all possible factor pairs, calculates aspect ratio 
- * for each arrangement, and selects the optimal solution.
- * 
- * 参数说明 Parameter Description:
- * @param n: 积木总数量 Total number of bricks (1-25)
- * @param size_x: 单个积木X方向物理尺寸(mm) Single brick X-direction physical size
- * @param size_y: 单个积木Y方向物理尺寸(mm) Single brick Y-direction physical size
- * 
- * 返回值 Return Value:
- * @return [grid_x, grid_y]: 最优网格排列 Optimal grid arrangement
- * 
- * 算法复杂度 Algorithm Complexity:
- * - 时间复杂度 Time: O(√n) - 只需检查到√n的因数
- * - 空间复杂度 Space: O(d(n)) - d(n)是n的因数个数
- * 
- * 优化策略 Optimization Strategy:
- * 1. 因数枚举优化：只检查1到√n，自动生成配对因数
- * 2. 比例计算优化：使用max/min确保比例≥1，便于比较
- * 3. 尺寸计算优化：预计算间距影响，避免重复计算
- * 
- * 示例计算过程 Example Calculation Process:
- * 输入 Input: n=6, size_x=16mm, size_y=8mm
- * 
- * 步骤1 Step 1: 枚举因数对 Enumerate factor pairs
- * - [1,6]: 1×6排列 1×6 arrangement
- * - [2,3]: 2×3排列 2×3 arrangement  
- * - [3,2]: 3×2排列 3×2 arrangement
- * - [6,1]: 6×1排列 6×1 arrangement
- * 
- * 步骤2 Step 2: 计算总尺寸 Calculate total dimensions
- * - [1,6]: (1×16+0×12) × (6×8+5×12) = 16×108mm, 比例=6.75
- * - [2,3]: (2×16+1×12) × (3×8+2×12) = 44×48mm, 比例=1.09 ✓
- * - [3,2]: (3×16+2×12) × (2×8+1×12) = 72×28mm, 比例=2.57
- * - [6,1]: (6×16+5×12) × (1×8+0×12) = 156×8mm, 比例=19.5
- * 
- * 步骤3 Step 3: 选择最优解 Select optimal solution
- * 最小比例=1.09，对应[2,3]排列 Minimum ratio=1.09, corresponds to [2,3] arrangement
- */
 function find_optimal_factors(n, size_x, size_y) = 
     assert(n >= 1, "n must be >= 1")
     assert(size_x > 0, "size_x must be > 0")
     assert(size_y > 0, "size_y must be > 0")
     
     let(
-        // 获取所有可能的因数对 - Get all possible factor pairs
-        // 优化：只枚举到√n，减少计算量 Optimization: only enumerate to √n, reduce computation
         all_factors = [for (i = [1 : n]) if (n % i == 0) [i, n/i]],
-        
-        // 计算每个因数对的总体尺寸比例 - Calculate overall dimension ratio for each factor pair
-        // 包含详细的尺寸计算和比例分析 Include detailed size calculation and ratio analysis
         ratios = [for (factors = all_factors) 
             let(
-                // 计算总体尺寸（积木尺寸 × 数量 + 间距 × (数量-1)）
-                // Calculate total dimensions (brick_size × count + spacing × (count-1))
-                // 公式说明 Formula explanation:
-                // - factors[0] * size_x: X方向所有积木的总宽度 Total width of all bricks in X direction
-                // - (factors[0] - 1) * TileSpacing: X方向间距总宽度 Total spacing width in X direction
                 total_x = factors[0] * size_x + (factors[0] - 1) * TileSpacing,
                 total_y = factors[1] * size_y + (factors[1] - 1) * TileSpacing,
-                
-                // 计算长宽比（总是 >= 1）- Calculate aspect ratio (always >= 1)
-                // 使用max/min确保比例≥1，便于比较不同排列的"方形程度"
-                // Use max/min to ensure ratio ≥1, easy to compare "squareness" of different arrangements
                 ratio = max(total_x, total_y) / min(total_x, total_y)
             )
             [factors, ratio]
         ],
-        
-        // 选择比例最接近1（最接近正方形）的因数对
-        // Select factor pair with ratio closest to 1 (closest to square)
-        // 最接近1的比例意味着最接近正方形，打印床利用率最高
-        // Ratio closest to 1 means closest to square, highest print bed utilization
         best_ratio = min([for (r = ratios) r[1]]),
         best_factors = [for (r = ratios) if (r[1] == best_ratio) r[0]][0]
     )
     best_factors;
 
-// 计算规则网格总体尺寸的函数
-// Function to calculate regular grid total dimensions
 function calculate_total_tiling_size(grid_x, grid_y, brick_width, brick_length) = 
     assert(grid_x >= 1, "grid_x must be >= 1")
     assert(grid_y >= 1, "grid_y must be >= 1")
@@ -455,8 +213,6 @@ function calculate_total_tiling_size(grid_x, grid_y, brick_width, brick_length) 
     assert(brick_length >= 1, "brick_length must be >= 1")
     
     let(
-        // 计算总体尺寸：积木尺寸 × 数量 + 间距 × (数量-1)
-        // Calculate total dimensions: brick_size × count + spacing × (count-1)
         total_width = grid_x * brick_width * UnitSize + (grid_x - 1) * TileSpacing,
         total_length = grid_y * brick_length * UnitSize + (grid_y - 1) * TileSpacing
     )
@@ -499,137 +255,11 @@ function calculate_total_size(tile_units, brick_width, brick_length) =
         )
         calculate_total_tiling_size(grid_dims[0], grid_dims[1], brick_width, brick_length);
 
-// 验证网格计算结果的模块
-// Module to validate grid calculation results
-module validate_grid_calculation(tile_units, grid_x, grid_y) {
-    assert(grid_x * grid_y == tile_units, 
-           str("Grid calculation error: ", grid_x, " × ", grid_y, " ≠ ", tile_units));
-}
 
-// 计算网格排列的长宽比
-// Calculate aspect ratio of grid arrangement
-function calculate_grid_aspect_ratio(grid_x, grid_y, brick_width, brick_length) = 
-    let(
-        total_size = calculate_total_tiling_size(grid_x, grid_y, brick_width, brick_length),
-        ratio = max(total_size[0], total_size[1]) / min(total_size[0], total_size[1])
-    )
-    ratio;
 
-// ========================================
 // 位置计算函数 - Position Calculation Functions
-// ========================================
 
-/*
- * 积木位置计算算法说明 - Brick Position Calculation Algorithm Description
- * 
- * 目标：计算每个积木在平铺中的精确位置，实现中心对称布局
- * Goal: Calculate precise position of each brick in tiling, implementing center-symmetric layout
- * 
- * 算法步骤 - Algorithm Steps:
- * 1. 计算单个积木的pitch（积木尺寸+间距）- Calculate single brick pitch (brick size + spacing)
- * 2. 计算整个网格的总尺寸 - Calculate total grid dimensions
- * 3. 计算起始偏移，使网格以原点为中心 - Calculate starting offset to center grid at origin
- * 4. 为每个网格位置计算具体坐标 - Calculate specific coordinates for each grid position
- * 5. 确保所有积木在同一Z平面上 - Ensure all bricks are on the same Z plane
- * 
- * 中心对称原理 - Center Symmetry Principle:
- * - 以坐标原点(0,0)为中心对称排列 - Symmetrically arranged around coordinate origin (0,0)
- * - 对于奇数个积木，中心积木位于原点 - For odd number of bricks, center brick at origin
- * - 对于偶数个积木，原点位于中心间隙 - For even number of bricks, origin at center gap
- * 
- * 示例 - Examples:
- * - 3x3排列：中心积木在(0,0)，其他积木对称分布 - 3x3 layout: center brick at (0,0), others symmetrically distributed
- * - 2x2排列：四个积木围绕原点对称分布 - 2x2 layout: four bricks symmetrically distributed around origin
- * - 4x1排列：积木沿X轴对称分布，Y轴居中 - 4x1 layout: bricks symmetrically distributed along X-axis, centered on Y-axis
- */
 
-/*
- * 计算积木位置的主函数 - Main function to calculate brick positions
- * 
- * 功能描述 Function Description:
- * 这个函数负责计算平铺中每个积木的精确3D坐标位置，实现中心对称布局。
- * 算法确保所有积木以坐标原点(0,0,0)为中心对称分布，创造美观平衡的排列。
- * 
- * This function calculates precise 3D coordinate positions for each brick in tiling,
- * implementing center-symmetric layout. The algorithm ensures all bricks are 
- * symmetrically distributed around coordinate origin (0,0,0), creating aesthetically 
- * balanced arrangements.
- * 
- * 参数说明 Parameter Description:
- * @param grid_x: X方向积木数量 Number of bricks in X direction (1-25)
- * @param grid_y: Y方向积木数量 Number of bricks in Y direction (1-25)  
- * @param brick_width: 单个积木宽度(单位) Single brick width in units (1-31)
- * @param brick_length: 单个积木长度(单位) Single brick length in units (1-31)
- * @param spacing: 积木间距(mm) Spacing between bricks in mm (typically 12mm)
- * 
- * 返回值 Return Value:
- * @return [[x1,y1,z1], [x2,y2,z2], ...]: 所有积木的3D坐标数组
- *         Array of 3D coordinates for all bricks
- * 
- * 中心对称算法原理 Center Symmetry Algorithm Principle:
- * 
- * 1. Pitch计算 Pitch Calculation:
- *    pitch = 积木物理尺寸 + 间距 = brick_size + spacing
- *    这是相邻积木中心点之间的距离 Distance between adjacent brick centers
- * 
- * 2. 网格跨度计算 Grid Span Calculation:
- *    total_span = (数量-1) × pitch = (count-1) × pitch
- *    这是第一个和最后一个积木中心之间的距离 Distance between first and last brick centers
- * 
- * 3. 中心偏移计算 Center Offset Calculation:
- *    offset = -total_span / 2
- *    这使得整个网格以原点为中心 This centers the entire grid at origin
- * 
- * 4. 位置生成 Position Generation:
- *    position[i] = offset + i × pitch
- *    为每个积木计算具体坐标 Calculate specific coordinates for each brick
- * 
- * 对称性验证 Symmetry Verification:
- * 
- * 奇数排列 Odd Arrangements (如3×3 like 3×3):
- * - 中心积木位于原点(0,0) Center brick at origin (0,0)
- * - 其他积木对称分布 Other bricks symmetrically distributed
- * - 例如3×3: 位置为[-pitch, 0, +pitch] × [-pitch, 0, +pitch]
- * 
- * 偶数排列 Even Arrangements (如2×2 like 2×2):
- * - 原点位于四个积木的中心 Origin at center of four bricks
- * - 积木围绕原点对称分布 Bricks symmetrically distributed around origin
- * - 例如2×2: 位置为[-pitch/2, +pitch/2] × [-pitch/2, +pitch/2]
- * 
- * 计算示例 Calculation Example:
- * 
- * 输入 Input: grid_x=2, grid_y=2, brick_width=2, brick_length=2, spacing=12
- * 
- * 步骤1 Step 1: 计算pitch Calculate pitch
- * - brick_pitch_x = 2×8 + 12 = 28mm
- * - brick_pitch_y = 2×8 + 12 = 28mm
- * 
- * 步骤2 Step 2: 计算网格跨度 Calculate grid span
- * - total_width = (2-1) × 28 = 28mm
- * - total_length = (2-1) × 28 = 28mm
- * 
- * 步骤3 Step 3: 计算中心偏移 Calculate center offset
- * - offset_x = -28/2 = -14mm
- * - offset_y = -28/2 = -14mm
- * 
- * 步骤4 Step 4: 生成位置坐标 Generate position coordinates
- * - 积木1 Brick 1 (i=0,j=0): [-14+0×28, -14+0×28, 0] = [-14, -14, 0]
- * - 积木2 Brick 2 (i=1,j=0): [-14+1×28, -14+0×28, 0] = [14, -14, 0]
- * - 积木3 Brick 3 (i=0,j=1): [-14+0×28, -14+1×28, 0] = [-14, 14, 0]
- * - 积木4 Brick 4 (i=1,j=1): [-14+1×28, -14+1×28, 0] = [14, 14, 0]
- * 
- * 验证对称性 Verify Symmetry:
- * - 中心点 Center: ((-14+14)/2, (-14+14)/2) = (0, 0) ✓
- * - 积木1和积木4关于原点对称 Brick 1 and 4 symmetric about origin ✓
- * - 积木2和积木3关于原点对称 Brick 2 and 3 symmetric about origin ✓
- * 
- * 性能优化 Performance Optimization:
- * - 使用列表推导式一次性生成所有位置 Use list comprehension to generate all positions at once
- * - 避免递归调用减少内存使用 Avoid recursive calls to reduce memory usage
- * - 预计算常量值避免重复计算 Pre-calculate constant values to avoid repeated computation
- */
-// 改进的位置计算函数 - Improved position calculation function
-// 支持规则网格和不规则排列 - Support both regular grid and irregular arrangements
 function calculate_brick_positions_advanced(layout_config, brick_width, brick_length, spacing) = 
     let(
         layout_type = layout_config[0],
@@ -638,8 +268,6 @@ function calculate_brick_positions_advanced(layout_config, brick_width, brick_le
     layout_type == "regular" ? 
         calculate_regular_positions(layout_data[0], layout_data[1], brick_width, brick_length, spacing) :
         calculate_irregular_positions(layout_data, brick_width, brick_length, spacing);
-
-// 规则网格位置计算（原有逻辑，保持兼容性）
 function calculate_regular_positions(grid_x, grid_y, brick_width, brick_length, spacing) = 
     assert(grid_x >= 1, "grid_x must be >= 1")
     assert(grid_y >= 1, "grid_y must be >= 1") 
@@ -663,8 +291,6 @@ function calculate_regular_positions(grid_x, grid_y, brick_width, brick_length, 
                 0
             ]
     ];
-
-// 不规则排列位置计算（新增功能）
 function calculate_irregular_positions(row_config, brick_width, brick_length, spacing) = 
     assert(len(row_config) >= 1, "row_config must have at least 1 row")
     assert(brick_width >= 1, "brick_width must be >= 1")
@@ -675,57 +301,37 @@ function calculate_irregular_positions(row_config, brick_width, brick_length, sp
         brick_size_x = brick_width * UnitSize,
         brick_size_y = brick_length * UnitSize,
         row_count = len(row_config),
-        
-        // 计算每行的Y位置（居中分布）
         total_height = row_count * brick_size_y + (row_count - 1) * spacing,
         start_y = -total_height / 2 + brick_size_y / 2,
         row_y_positions = [for (i = [0 : row_count-1]) 
             start_y + i * (brick_size_y + spacing)],
-        
-        // 为每行计算积木位置
         all_positions = [for (row_idx = [0 : row_count-1])
             let(
                 bricks_in_row = row_config[row_idx],
                 row_y = row_y_positions[row_idx],
-                
-                // 计算这一行的X位置（居中排列）
                 row_width = bricks_in_row * brick_size_x + (bricks_in_row - 1) * spacing,
                 start_x = -row_width / 2 + brick_size_x / 2,
-                
                 row_positions = [for (col_idx = [0 : bricks_in_row-1])
                     [start_x + col_idx * (brick_size_x + spacing), row_y, 0]
                 ]
             )
             row_positions
         ],
-        
-        // 展平位置数组
         flattened_positions = [for (row_positions = all_positions)
             for (pos = row_positions) pos]
     )
     flattened_positions;
-
-// 兼容性函数：保持原有接口
 function calculate_brick_positions(grid_x, grid_y, brick_width, brick_length, spacing) = 
     calculate_regular_positions(grid_x, grid_y, brick_width, brick_length, spacing);
-
-// 计算单个积木pitch的函数
-// Function to calculate single brick pitch
-// pitch = 积木尺寸 + 间距 - pitch = brick size + spacing
 function calculate_brick_pitch(brick_width, brick_length, spacing) = 
     assert(brick_width >= 1, "brick_width must be >= 1")
     assert(brick_length >= 1, "brick_length must be >= 1")
     assert(spacing >= 0, "spacing must be >= 0")
     
     [
-        brick_width * UnitSize + spacing,   // X方向pitch - X direction pitch
-        brick_length * UnitSize + spacing   // Y方向pitch - Y direction pitch
+        brick_width * UnitSize + spacing,
+        brick_length * UnitSize + spacing
     ];
-
-// 计算网格中心偏移的函数
-// Function to calculate grid center offset
-// 计算使网格以原点为中心的偏移量
-// Calculate offset to center grid at origin
 function calculate_center_offset(grid_x, grid_y, pitch_x, pitch_y) = 
     assert(grid_x >= 1, "grid_x must be >= 1")
     assert(grid_y >= 1, "grid_y must be >= 1")
@@ -733,115 +339,47 @@ function calculate_center_offset(grid_x, grid_y, pitch_x, pitch_y) =
     assert(pitch_y > 0, "pitch_y must be > 0")
     
     let(
-        // 计算网格总跨度（最后一个积木位置 - 第一个积木位置）
-        // Calculate total grid span (last brick position - first brick position)
         total_span_x = (grid_x - 1) * pitch_x,
         total_span_y = (grid_y - 1) * pitch_y
     )
     [
-        -total_span_x / 2,  // X方向中心偏移 - X direction center offset
-        -total_span_y / 2   // Y方向中心偏移 - Y direction center offset
+        -total_span_x / 2,
+        -total_span_y / 2
     ];
 
-// 验证位置计算结果的模块
-// Module to validate position calculation results
 module validate_brick_positions(positions, expected_count) {
     assert(len(positions) == expected_count, 
            str("Position count mismatch: got ", len(positions), ", expected ", expected_count));
     assert(len(positions) > 0, "Position array cannot be empty");
-    // 验证所有位置都有3个坐标 - Verify all positions have 3 coordinates
     assert(len([for (pos = positions) if (len(pos) != 3) pos]) == 0, 
            "All positions must have exactly 3 coordinates [x, y, z]");
-    // 验证所有Z坐标都为0 - Verify all Z coordinates are 0
     assert(len([for (pos = positions) if (pos[2] != 0) pos]) == 0, 
            "All Z coordinates must be 0 (same plane)");
 }
 
-// 计算位置边界的函数
-// Function to calculate position boundaries
-// 计算所有积木位置的边界框
-// Calculate bounding box of all brick positions
 function calculate_position_bounds(positions, brick_width, brick_length) = 
     assert(len(positions) > 0, "Position array cannot be empty")
     assert(brick_width >= 1, "brick_width must be >= 1")
     assert(brick_length >= 1, "brick_length must be >= 1")
     
     let(
-        // 计算单个积木的实际尺寸
-        // Calculate actual size of single brick
         brick_size_x = brick_width * UnitSize,
         brick_size_y = brick_length * UnitSize,
-        
-        // 提取所有X和Y坐标 - Extract all X and Y coordinates
         x_coords = [for (pos = positions) pos[0]],
         y_coords = [for (pos = positions) pos[1]],
-        
-        // 计算边界 - Calculate boundaries
         min_x = min(x_coords) - brick_size_x / 2,
         max_x = max(x_coords) + brick_size_x / 2,
         min_y = min(y_coords) - brick_size_y / 2,
         max_y = max(y_coords) + brick_size_y / 2
     )
     [
-        [min_x, min_y],  // 最小边界 - Minimum bounds
-        [max_x, max_y]   // 最大边界 - Maximum bounds
+        [min_x, min_y],
+        [max_x, max_y]
     ];
 
-// 检查位置对称性的函数
-// Function to check position symmetry
-// 验证位置是否以原点为中心对称
-// Verify positions are symmetrically centered around origin
-function check_position_symmetry(positions, tolerance = 0.001) = 
-    assert(len(positions) > 0, "Position array cannot be empty")
-    assert(tolerance > 0, "tolerance must be > 0")
-    
-    let(
-        // 提取所有X和Y坐标 - Extract all X and Y coordinates
-        x_coords = [for (pos = positions) pos[0]],
-        y_coords = [for (pos = positions) pos[1]],
-        
-        // 计算坐标范围的中心点（应该接近0表示中心对称）
-        // Calculate center point of coordinate range (should be close to 0 for center symmetry)
-        min_x = len(x_coords) > 0 ? x_coords[0] : 0,
-        max_x = len(x_coords) > 0 ? x_coords[0] : 0,
-        min_y = len(y_coords) > 0 ? y_coords[0] : 0,
-        max_y = len(y_coords) > 0 ? y_coords[0] : 0,
-        
-        // 找到实际的最小和最大值
-        // Find actual min and max values
-        actual_min_x = len(x_coords) > 1 ? 
-                      (x_coords[0] < x_coords[1] ? 
-                       (len(x_coords) > 2 && x_coords[2] < x_coords[0] ? x_coords[2] : x_coords[0]) : 
-                       (len(x_coords) > 2 && x_coords[2] < x_coords[1] ? x_coords[2] : x_coords[1])) : 
-                      (len(x_coords) > 0 ? x_coords[0] : 0),
-        actual_max_x = len(x_coords) > 1 ? 
-                      (x_coords[0] > x_coords[1] ? 
-                       (len(x_coords) > 2 && x_coords[2] > x_coords[0] ? x_coords[2] : x_coords[0]) : 
-                       (len(x_coords) > 2 && x_coords[2] > x_coords[1] ? x_coords[2] : x_coords[1])) : 
-                      (len(x_coords) > 0 ? x_coords[0] : 0),
-        actual_min_y = len(y_coords) > 1 ? 
-                      (y_coords[0] < y_coords[1] ? 
-                       (len(y_coords) > 2 && y_coords[2] < y_coords[0] ? y_coords[2] : y_coords[0]) : 
-                       (len(y_coords) > 2 && y_coords[2] < y_coords[1] ? y_coords[2] : y_coords[1])) : 
-                      (len(y_coords) > 0 ? y_coords[0] : 0),
-        actual_max_y = len(y_coords) > 1 ? 
-                      (y_coords[0] > y_coords[1] ? 
-                       (len(y_coords) > 2 && y_coords[2] > y_coords[0] ? y_coords[2] : y_coords[0]) : 
-                       (len(y_coords) > 2 && y_coords[2] > y_coords[1] ? y_coords[2] : y_coords[1])) : 
-                      (len(y_coords) > 0 ? y_coords[0] : 0),
-        
-        // 计算中心点
-        // Calculate center point
-        center_x = (actual_min_x + actual_max_x) / 2,
-        center_y = (actual_min_y + actual_max_y) / 2
-    )
-    // 对于完全对称的布局，中心点应该接近原点
-    // For perfectly symmetric layout, center point should be close to origin
-    abs(center_x) < tolerance && abs(center_y) < tolerance;
 
-// ========================================
+
 // 尺寸验证和警告系统 - Size Validation and Warning System
-// ========================================
 
 /*
  * 尺寸验证和警告系统说明 - Size Validation and Warning System Description
@@ -1168,9 +706,7 @@ function calculate_bed_utilization(total_x, total_y, bed_size = 256) =
     )
     min(utilization, 100); // 限制在100%以内 - Limit to 100%
 
-// ========================================
-// 计算参数 - Calculated Parameters  
-// ========================================
+// 计算参数 - Calculated Parameters
 
 // 使用函数计算外壳尺寸 - Calculate exterior dimensions using functions
 OuterDimensions = calculate_outer_dimensions(width, length, height, UnitSize, CLEARANCESize);
@@ -1201,9 +737,7 @@ ActualStudMargin = apply_clearance_adjustment(StudMargin, CLEARANCESize, "half")
 StudCount = calculate_stud_count(width, length);
 TubeCount = calculate_tube_count(width, length, height);
 
-// ========================================
 // 参数验证和调试输出 - Parameter Validation & Debug Output
-// ========================================
 
 // 参数验证 - Parameter validation
 assert(validate_parameters(width, length, height), 
@@ -1266,8 +800,7 @@ if (tile_units > 1) {
     // 计算位置边界 - Calculate position bounds
     PositionBounds = calculate_position_bounds(BrickPositions, width, length);
     
-    // 检查位置对称性 - Check position symmetry
-    IsSymmetric = check_position_symmetry(BrickPositions);
+
     
     echo("=== 平铺配置 Tiling Configuration ===");
     echo(str("平铺积木数量 Tile Units: ", tile_units));
@@ -1285,7 +818,7 @@ if (tile_units > 1) {
     echo(str("积木Pitch X方向 Brick Pitch X: ", BrickPitch[0], "mm"));
     echo(str("积木Pitch Y方向 Brick Pitch Y: ", BrickPitch[1], "mm"));
     echo(str("位置数量 Position Count: ", len(BrickPositions)));
-    echo(str("中心对称 Center Symmetric: ", IsSymmetric ? "是 Yes" : "否 No"));
+
     echo(str("边界范围 Bounds: [", PositionBounds[0][0], ",", PositionBounds[0][1], "] 到 to [", 
              PositionBounds[1][0], ",", PositionBounds[1][1], "]mm"));
     
@@ -1333,273 +866,9 @@ if (CLEARANCESize > 0.5) {
     echo("警告 WARNING: 间隙过大可能影响配合精度 - Large clearance may affect fit precision");
 }
 
-// ========================================
-// 网格计算测试用例 - Grid Calculation Test Cases
-// ========================================
 
-// 测试网格计算函数的正确性 - Test grid calculation function correctness
-// 这些测试用例验证算法是否选择了使总体尺寸最接近正方形的排列方式
-// These test cases verify that the algorithm selects arrangements that make overall dimensions closest to square
 
-module test_grid_calculations() {
-    echo("=== 网格计算测试 Grid Calculation Tests ===");
-    
-    // 测试用例1：正方形积木的完全平方数配置
-    // Test Case 1: Square bricks with perfect square configurations
-    echo("测试1 Test 1: 正方形积木 Square Bricks");
-    test_2x2_4units = calculate_grid_dimensions(4, 2, 2);  // 应该是2x2 - Should be 2x2
-    test_2x2_9units = calculate_grid_dimensions(9, 2, 2);  // 应该是3x3 - Should be 3x3
-    test_4x4_4units = calculate_grid_dimensions(4, 4, 4);  // 应该是2x2 - Should be 2x2
-    
-    // 验证计算结果 - Validate calculation results
-    validate_grid_calculation(4, test_2x2_4units[0], test_2x2_4units[1]);
-    validate_grid_calculation(9, test_2x2_9units[0], test_2x2_9units[1]);
-    validate_grid_calculation(4, test_4x4_4units[0], test_4x4_4units[1]);
-    
-    echo(str("2x2积木4个单位 2x2 brick 4 units: ", test_2x2_4units, " (期望 expected: [2,2])"));
-    echo(str("2x2积木9个单位 2x2 brick 9 units: ", test_2x2_9units, " (期望 expected: [3,3])"));
-    echo(str("4x4积木4个单位 4x4 brick 4 units: ", test_4x4_4units, " (期望 expected: [2,2])"));
-    
-    // 测试用例2：矩形积木的各种配置
-    // Test Case 2: Rectangular bricks with various configurations
-    echo("测试2 Test 2: 矩形积木 Rectangular Bricks");
-    test_16x2_4units = calculate_grid_dimensions(4, 16, 2);  // 应该选择最优排列
-    test_8x1_6units = calculate_grid_dimensions(6, 8, 1);   // 应该选择最优排列
-    test_6x2_8units = calculate_grid_dimensions(8, 6, 2);   // 应该选择最优排列
-    
-    // 验证计算结果 - Validate calculation results
-    validate_grid_calculation(4, test_16x2_4units[0], test_16x2_4units[1]);
-    validate_grid_calculation(6, test_8x1_6units[0], test_8x1_6units[1]);
-    validate_grid_calculation(8, test_6x2_8units[0], test_6x2_8units[1]);
-    
-    // 计算长宽比 - Calculate aspect ratios
-    ratio_16x2_4units = calculate_grid_aspect_ratio(test_16x2_4units[0], test_16x2_4units[1], 16, 2);
-    ratio_8x1_6units = calculate_grid_aspect_ratio(test_8x1_6units[0], test_8x1_6units[1], 8, 1);
-    ratio_6x2_8units = calculate_grid_aspect_ratio(test_6x2_8units[0], test_6x2_8units[1], 6, 2);
-    
-    echo(str("16x2积木4个单位 16x2 brick 4 units: ", test_16x2_4units, " 比例 ratio: ", ratio_16x2_4units));
-    echo(str("8x1积木6个单位 8x1 brick 6 units: ", test_8x1_6units, " 比例 ratio: ", ratio_8x1_6units));
-    echo(str("6x2积木8个单位 6x2 brick 8 units: ", test_6x2_8units, " 比例 ratio: ", ratio_6x2_8units));
-    
-    // 验证16x2积木4个单位的选择逻辑
-    // Verify selection logic for 16x2 brick with 4 units
-    echo("验证16x2积木4个单位的选择逻辑 Verify 16x2 brick 4 units selection logic:");
-    size_16x2_x = 16 * UnitSize;
-    size_16x2_y = 2 * UnitSize;
-    
-    // 计算4x1排列的总尺寸和比例
-    total_4x1_x = 4 * size_16x2_x + 3 * TileSpacing;  // 4*128 + 3*12 = 548mm
-    total_4x1_y = 1 * size_16x2_y + 0 * TileSpacing;  // 1*16 + 0*12 = 16mm
-    ratio_4x1 = total_4x1_x / total_4x1_y;  // 548/16 = 34.25
-    
-    // 计算2x2排列的总尺寸和比例
-    total_2x2_x = 2 * size_16x2_x + 1 * TileSpacing;  // 2*128 + 1*12 = 268mm
-    total_2x2_y = 2 * size_16x2_y + 1 * TileSpacing;  // 2*16 + 1*12 = 44mm
-    ratio_2x2 = total_2x2_x / total_2x2_y;  // 268/44 = 6.09
-    
-    // 计算1x4排列的总尺寸和比例
-    total_1x4_x = 1 * size_16x2_x + 0 * TileSpacing;  // 1*128 + 0*12 = 128mm
-    total_1x4_y = 4 * size_16x2_y + 3 * TileSpacing;  // 4*16 + 3*12 = 100mm
-    ratio_1x4 = total_1x4_x / total_1x4_y;  // 128/100 = 1.28
-    
-    echo(str("4x1排列 4x1 layout: ", total_4x1_x, "x", total_4x1_y, "mm, 比例 ratio: ", ratio_4x1));
-    echo(str("2x2排列 2x2 layout: ", total_2x2_x, "x", total_2x2_y, "mm, 比例 ratio: ", ratio_2x2));
-    echo(str("1x4排列 1x4 layout: ", total_1x4_x, "x", total_1x4_y, "mm, 比例 ratio: ", ratio_1x4));
-    echo(str("最优选择 Optimal choice: 1x4 (比例最接近1 ratio closest to 1)"));
-    
-    // 测试用例3：边界条件
-    // Test Case 3: Boundary conditions
-    echo("测试3 Test 3: 边界条件 Boundary Conditions");
-    test_single = calculate_grid_dimensions(1, 6, 2);     // 单个积木 - Single brick
-    test_prime = calculate_grid_dimensions(7, 3, 3);      // 质数 - Prime number
-    test_large = calculate_grid_dimensions(25, 2, 2);     // 最大值 - Maximum value
-    
-    // 验证计算结果 - Validate calculation results
-    validate_grid_calculation(1, test_single[0], test_single[1]);
-    validate_grid_calculation(7, test_prime[0], test_prime[1]);
-    validate_grid_calculation(25, test_large[0], test_large[1]);
-    
-    echo(str("单个积木 Single brick: ", test_single, " (期望 expected: [1,1])"));
-    echo(str("质数7个单位 Prime 7 units: ", test_prime, " (期望 expected: [7,1] 或 or [1,7])"));
-    echo(str("最大25个单位 Maximum 25 units: ", test_large, " (期望 expected: [5,5])"));
-    
-    // 额外测试：验证算法确实选择了最优排列
-    // Additional test: verify algorithm indeed selects optimal arrangement
-    echo("测试4 Test 4: 算法验证 Algorithm Verification");
-    
-    // 测试不同积木尺寸的6个单位排列
-    test_1x1_6units = calculate_grid_dimensions(6, 1, 1);   // 1x1积木6个单位
-    test_2x1_6units = calculate_grid_dimensions(6, 2, 1);   // 2x1积木6个单位
-    test_3x1_6units = calculate_grid_dimensions(6, 3, 1);   // 3x1积木6个单位
-    
-    ratio_1x1_6units = calculate_grid_aspect_ratio(test_1x1_6units[0], test_1x1_6units[1], 1, 1);
-    ratio_2x1_6units = calculate_grid_aspect_ratio(test_2x1_6units[0], test_2x1_6units[1], 2, 1);
-    ratio_3x1_6units = calculate_grid_aspect_ratio(test_3x1_6units[0], test_3x1_6units[1], 3, 1);
-    
-    echo(str("1x1积木6个单位: ", test_1x1_6units, " 比例: ", ratio_1x1_6units));
-    echo(str("2x1积木6个单位: ", test_2x1_6units, " 比例: ", ratio_2x1_6units));
-    echo(str("3x1积木6个单位: ", test_3x1_6units, " 比例: ", ratio_3x1_6units));
-    
-    echo("============================================");
-}
-
-// ========================================
-// 位置计算测试用例 - Position Calculation Test Cases
-// ========================================
-
-// 测试位置计算函数的正确性 - Test position calculation function correctness
-// 这些测试用例验证位置计算、中心对称和间距逻辑的正确性
-// These test cases verify correctness of position calculation, center symmetry and spacing logic
-
-module test_position_calculations() {
-    echo("=== 位置计算测试 Position Calculation Tests ===");
-    
-    // 测试用例1：单个积木位置
-    // Test Case 1: Single brick position
-    echo("测试1 Test 1: 单个积木位置 Single Brick Position");
-    single_pos = calculate_brick_positions(1, 1, 2, 2, TileSpacing);
-    validate_brick_positions(single_pos, 1);
-    
-    echo(str("单个积木位置 Single brick position: ", single_pos[0]));
-    echo(str("期望位置 Expected position: [0, 0, 0]"));
-    
-    // 验证单个积木位于原点 - Verify single brick is at origin
-    assert(abs(single_pos[0][0]) < 0.001, "Single brick X should be at origin");
-    assert(abs(single_pos[0][1]) < 0.001, "Single brick Y should be at origin");
-    assert(single_pos[0][2] == 0, "Single brick Z should be 0");
-    
-    // 测试用例2：2x2排列的中心对称性
-    // Test Case 2: 2x2 arrangement center symmetry
-    echo("测试2 Test 2: 2x2排列中心对称 2x2 Arrangement Center Symmetry");
-    pos_2x2 = calculate_brick_positions(2, 2, 2, 2, TileSpacing);
-    validate_brick_positions(pos_2x2, 4);
-    
-    // 计算2x2排列的pitch和偏移
-    pitch_2x2 = calculate_brick_pitch(2, 2, TileSpacing);
-    offset_2x2 = calculate_center_offset(2, 2, pitch_2x2[0], pitch_2x2[1]);
-    
-    echo(str("2x2积木Pitch: [", pitch_2x2[0], ", ", pitch_2x2[1], "]mm"));
-    echo(str("2x2中心偏移: [", offset_2x2[0], ", ", offset_2x2[1], "]mm"));
-    echo("2x2积木位置 2x2 brick positions:");
-    for (i = [0 : len(pos_2x2)-1]) {
-        echo(str("  积木 Brick ", i+1, ": [", pos_2x2[i][0], ", ", pos_2x2[i][1], ", ", pos_2x2[i][2], "]mm"));
-    }
-    
-    // 验证2x2排列的对称性 - Verify 2x2 arrangement symmetry
-    is_symmetric_2x2 = check_position_symmetry(pos_2x2);
-    echo(str("2x2对称性 2x2 symmetry: ", is_symmetric_2x2 ? "是 Yes" : "否 No"));
-    
-    // 测试用例3：3x3排列的中心对称性（奇数排列）
-    // Test Case 3: 3x3 arrangement center symmetry (odd arrangement)
-    echo("测试3 Test 3: 3x3排列中心对称 3x3 Arrangement Center Symmetry");
-    pos_3x3 = calculate_brick_positions(3, 3, 2, 2, TileSpacing);
-    validate_brick_positions(pos_3x3, 9);
-    
-    // 计算3x3排列的pitch和偏移
-    pitch_3x3 = calculate_brick_pitch(2, 2, TileSpacing);
-    offset_3x3 = calculate_center_offset(3, 3, pitch_3x3[0], pitch_3x3[1]);
-    
-    echo(str("3x3积木Pitch: [", pitch_3x3[0], ", ", pitch_3x3[1], "]mm"));
-    echo(str("3x3中心偏移: [", offset_3x3[0], ", ", offset_3x3[1], "]mm"));
-    
-    // 验证3x3排列的中心积木位于原点 - Verify center brick of 3x3 arrangement is at origin
-    center_brick_3x3 = pos_3x3[4]; // 第5个积木应该是中心积木 - 5th brick should be center brick
-    echo(str("3x3中心积木位置 3x3 center brick position: [", center_brick_3x3[0], ", ", center_brick_3x3[1], ", ", center_brick_3x3[2], "]mm"));
-    
-    // 验证3x3排列的对称性 - Verify 3x3 arrangement symmetry
-    is_symmetric_3x3 = check_position_symmetry(pos_3x3);
-    echo(str("3x3对称性 3x3 symmetry: ", is_symmetric_3x3 ? "是 Yes" : "否 No"));
-    
-    // 测试用例4：矩形排列（4x1）
-    // Test Case 4: Rectangular arrangement (4x1)
-    echo("测试4 Test 4: 矩形排列 Rectangular Arrangement (4x1)");
-    pos_4x1 = calculate_brick_positions(4, 1, 2, 2, TileSpacing);
-    validate_brick_positions(pos_4x1, 4);
-    
-    // 计算4x1排列的pitch和偏移
-    pitch_4x1 = calculate_brick_pitch(2, 2, TileSpacing);
-    offset_4x1 = calculate_center_offset(4, 1, pitch_4x1[0], pitch_4x1[1]);
-    
-    echo(str("4x1积木Pitch: [", pitch_4x1[0], ", ", pitch_4x1[1], "]mm"));
-    echo(str("4x1中心偏移: [", offset_4x1[0], ", ", offset_4x1[1], "]mm"));
-    echo("4x1积木位置 4x1 brick positions:");
-    for (i = [0 : len(pos_4x1)-1]) {
-        echo(str("  积木 Brick ", i+1, ": [", pos_4x1[i][0], ", ", pos_4x1[i][1], ", ", pos_4x1[i][2], "]mm"));
-    }
-    
-    // 验证4x1排列的对称性 - Verify 4x1 arrangement symmetry
-    is_symmetric_4x1 = check_position_symmetry(pos_4x1);
-    echo(str("4x1对称性 4x1 symmetry: ", is_symmetric_4x1 ? "是 Yes" : "否 No"));
-    
-    // 测试用例5：不同积木尺寸的位置计算
-    // Test Case 5: Position calculation for different brick sizes
-    echo("测试5 Test 5: 不同积木尺寸 Different Brick Sizes");
-    
-    // 16x2积木的2x2排列
-    pos_16x2_2x2 = calculate_brick_positions(2, 2, 16, 2, TileSpacing);
-    validate_brick_positions(pos_16x2_2x2, 4);
-    
-    // 计算16x2积木的pitch
-    pitch_16x2 = calculate_brick_pitch(16, 2, TileSpacing);
-    
-    echo(str("16x2积木Pitch: [", pitch_16x2[0], ", ", pitch_16x2[1], "]mm"));
-    echo("16x2积木2x2排列位置 16x2 brick 2x2 arrangement positions:");
-    for (i = [0 : len(pos_16x2_2x2)-1]) {
-        echo(str("  积木 Brick ", i+1, ": [", pos_16x2_2x2[i][0], ", ", pos_16x2_2x2[i][1], ", ", pos_16x2_2x2[i][2], "]mm"));
-    }
-    
-    // 验证16x2积木排列的对称性 - Verify 16x2 brick arrangement symmetry
-    is_symmetric_16x2 = check_position_symmetry(pos_16x2_2x2);
-    echo(str("16x2对称性 16x2 symmetry: ", is_symmetric_16x2 ? "是 Yes" : "否 No"));
-    
-    // 测试用例6：边界计算
-    // Test Case 6: Boundary calculation
-    echo("测试6 Test 6: 边界计算 Boundary Calculation");
-    
-    bounds_2x2 = calculate_position_bounds(pos_2x2, 2, 2);
-    bounds_3x3 = calculate_position_bounds(pos_3x3, 2, 2);
-    bounds_4x1 = calculate_position_bounds(pos_4x1, 2, 2);
-    
-    echo(str("2x2边界 2x2 bounds: [", bounds_2x2[0][0], ",", bounds_2x2[0][1], "] 到 to [", bounds_2x2[1][0], ",", bounds_2x2[1][1], "]mm"));
-    echo(str("3x3边界 3x3 bounds: [", bounds_3x3[0][0], ",", bounds_3x3[0][1], "] 到 to [", bounds_3x3[1][0], ",", bounds_3x3[1][1], "]mm"));
-    echo(str("4x1边界 4x1 bounds: [", bounds_4x1[0][0], ",", bounds_4x1[0][1], "] 到 to [", bounds_4x1[1][0], ",", bounds_4x1[1][1], "]mm"));
-    
-    // 测试用例7：间距验证
-    // Test Case 7: Spacing verification
-    echo("测试7 Test 7: 间距验证 Spacing Verification");
-    
-    // 验证2x2排列中相邻积木的间距
-    // Verify spacing between adjacent bricks in 2x2 arrangement
-    pos1 = pos_2x2[0]; // 第一个积木 [-14, -14, 0] - First brick
-    pos3 = pos_2x2[2]; // 第三个积木 [14, -14, 0] - Third brick (same Y, different X)
-    
-    distance_x = abs(pos3[0] - pos1[0]);
-    expected_distance_x = pitch_2x2[0];
-    
-    echo(str("相邻积木X方向距离 Adjacent brick X distance: ", distance_x, "mm"));
-    echo(str("期望X方向距离 Expected X distance: ", expected_distance_x, "mm"));
-    echo(str("间距验证 Spacing verification: ", abs(distance_x - expected_distance_x) < 0.001 ? "通过 Pass" : "失败 Fail"));
-    
-    // 测试用例8：Z平面验证
-    // Test Case 8: Z plane verification
-    echo("测试8 Test 8: Z平面验证 Z Plane Verification");
-    
-    // 验证所有积木都在Z=0平面上
-    // Verify all bricks are on Z=0 plane
-    all_z_zero = len([for (pos = pos_3x3) if (pos[2] != 0) pos]) == 0;
-    echo(str("所有积木在Z=0平面 All bricks on Z=0 plane: ", all_z_zero ? "是 Yes" : "否 No"));
-    
-    echo("============================================");
-}
-
-// 执行测试（仅在开发时启用）- Execute tests (enable only during development)
-// 取消注释下面这行来运行测试 - Uncomment the line below to run tests
-// test_grid_calculations();
-// test_position_calculations();
-
-// ========================================
 // 单个积木生成模块 - Single Brick Generation Module
-// ========================================
 
 /*
  * 单个乐高积木生成模块 - Single LEGO Brick Generation Module
@@ -1744,27 +1013,7 @@ module single_tube_with_height(tube_height) {
 
 // ========================================
 // 主平铺渲染逻辑 - Main Tiling Rendering Logic
-// ========================================
-
-/*
- * 主平铺渲染模块 - Main Tiling Rendering Module
- * 
- * 功能：根据tile_units参数选择单个积木或平铺模式
- * Function: Select single brick or tiling mode based on tile_units parameter
- * 
- * 渲染逻辑 - Rendering Logic:
- * - tile_units = 1: 单个积木模式，保持原有功能 - Single brick mode, maintain original functionality
- * - tile_units > 1: 平铺模式，生成多个积木的智能排列 - Tiling mode, generate intelligent arrangement of multiple bricks
- * 
- * 特性 Features:
- * - 智能网格计算：自动选择最优X×Y排列 - Intelligent grid calculation: automatically select optimal X×Y arrangement
- * - 中心对称布局：以原点为中心对称排列 - Center symmetric layout: symmetrically arranged around origin
- * - 固定间距：使用12mm固定间距确保打印质量 - Fixed spacing: use 12mm fixed spacing to ensure print quality
- * - 尺寸验证：集成警告系统检查打印床兼容性 - Size validation: integrated warning system checks print bed compatibility
- * - 向后兼容：完全兼容现有参数和功能 - Backward compatible: fully compatible with existing parameters and functionality
- */
 module generate_tiling() {
-    // 参数验证 - Parameter validation
     assert(tile_units >= 1, "tile_units must be >= 1");
     assert(tile_units <= 25, "tile_units must be <= 25 (maximum 5x5 arrangement)");
     assert(width >= 1, "width must be >= 1");
@@ -1772,26 +1021,16 @@ module generate_tiling() {
     assert(height >= 1, "height must be >= 1");
     
     if (tile_units == 1) {
-        // ========================================
-        // 单个积木模式 - Single Brick Mode
-        // ========================================
-        
         echo("=== 单个积木模式 Single Brick Mode ===");
         echo(str("积木规格 Brick Spec: ", width, "×", length, "×", height, " 单位 units"));
         echo(str("积木尺寸 Brick Size: ", width * UnitSize, "×", length * UnitSize, "×", height * LayerSize, "mm"));
         echo("========================================");
         
-        // 生成单个积木（保持原有功能）- Generate single brick (maintain original functionality)
         single_lego_brick(width, length, height);
         
     } else {
-        // ========================================
-        // 平铺模式 - Tiling Mode
-        // ========================================
-        
         echo("=== 平铺模式 Tiling Mode (改进版 Improved) ===");
         
-        // 1. 计算最优布局 - Calculate optimal layout (支持不规则排列)
         optimal_layout = calculate_optimal_layout(tile_units, width, length);
         layout_type = optimal_layout[0];
         layout_data = optimal_layout[1];
@@ -1799,8 +1038,7 @@ module generate_tiling() {
         echo(str("布局类型 Layout Type: ", layout_type));
         if (layout_type == "regular") {
             echo(str("规则网格 Regular Grid: ", layout_data[0], "×", layout_data[1]));
-            // 验证规则网格计算结果
-            validate_grid_calculation(tile_units, layout_data[0], layout_data[1]);
+
         } else {
             echo(str("不规则排列 Irregular Layout: ", layout_data, " (每行积木数 bricks per row)"));
             // 验证不规则排列的积木总数
@@ -1866,9 +1104,7 @@ module generate_tiling() {
     }
 }
 
-// ========================================
 // 主模型生成 - Main Model Generation
-// ========================================
 
 // 主模型组装 - Main model assembly
 // 使用新的generate_tiling模块根据tile_units选择渲染模式 - Use new generate_tiling module to select rendering mode based on tile_units
@@ -1889,25 +1125,18 @@ module exterior_shell() {
                                InnerWidth, InnerLength, InnerHeight);
 }
 
-// 顶部凸点阵列模块 - Top studs array module
-// 保持向后兼容，内部调用新的单个积木模块 - Maintain backward compatibility, internally calls new single brick module
 module top_studs() {
     single_brick_top_studs(width, length, OuterHeight);
 }
 
-// 底部管道阵列模块 - Bottom tubes array module
-// 保持向后兼容，内部调用新的单个积木模块 - Maintain backward compatibility, internally calls new single brick module
 module bottom_tubes() {
     single_brick_bottom_tubes(width, length, TubeHeight, ActualTubeMargin);
 }
 
-// 单个凸点模块 - Single stud module
 module single_stud() {
-    // 创建圆柱形凸点几何体 - Create cylindrical stud geometry
-    // 使用StudDiameter和StudHeight参数 - Use StudDiameter and StudHeight parameters
     cylinder(
-        h = StudHeight,           // 凸点高度 - Stud height
-        d = StudDiameter,         // 凸点直径 - Stud diameter
+        h = StudHeight,
+        d = StudDiameter,
         center = false            // 从底面开始 - Start from bottom
     );
 }
