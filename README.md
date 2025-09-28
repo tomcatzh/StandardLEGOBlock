@@ -9,6 +9,7 @@ A parametric LEGO-compatible brick 3D model created with OpenSCAD, supporting cu
 ### 核心功能 Core Features
 - **完全兼容** - 与真实乐高积木100%兼容 / **Fully Compatible** - 100% compatible with real LEGO bricks
 - **参数化设计** - 轻松调整长度、宽度、高度 / **Parametric Design** - Easily adjust length, width, height
+- **MakerWorld支持** - 完全兼容拓竹MakerWorld参数化界面 / **MakerWorld Compatible** - Fully compatible with Bambu Lab MakerWorld parametric interface
 - **3D打印优化** - 考虑了打印精度和结构强度 / **3D Print Optimized** - Considers printing precision and structural strength
 - **标准规格** - 严格遵循乐高官方尺寸标准 / **Standard Specifications** - Strictly follows official LEGO dimensions
 - **开源免费** - MIT许可证，自由使用和修改 / **Open Source** - MIT license, free to use and modify
@@ -41,6 +42,13 @@ Here are renders of different brick configurations:
 
 ### 🆕 6x2 智能平铺 (11个单位) / 6x2 Intelligent Tiling (11 Units)
 ![6x2 LEGO Brick Tiling 11 Units](samples/lego_basic_module_6x2_tiling_11.png)
+
+### 🎛️ MakerWorld 参数化支持 / MakerWorld Parametric Support
+![MakerWorld Parametric Interface](samples/maker_worlds_parametrics.png)
+
+完全支持拓竹MakerWorld参数化模型功能，用户可以通过直观的界面调整所有参数。
+
+Full support for Bambu Lab MakerWorld parametric model functionality, allowing users to adjust all parameters through an intuitive interface.
 
 ## 🚀 快速开始 / Quick Start
 
@@ -153,7 +161,9 @@ StandardLEGOBlock/
 │   ├── lego_basic_module_2x1.png    # 2x1积木渲染 / 2x1 brick render
 │   ├── lego_basic_module_6x2.png    # 6x2积木渲染 / 6x2 brick render
 │   ├── lego_basic_module_6x2_bottom.png # 6x2底部视图 / 6x2 bottom view
-│   └── lego_basic_module_16x16.png  # 16x16底板渲染 / 16x16 baseplate render
+│   ├── lego_basic_module_6x2_tiling_11.png # 6x2平铺示例 / 6x2 tiling example
+│   ├── lego_basic_module_16x16.png  # 16x16底板渲染 / 16x16 baseplate render
+│   └── maker_worlds_parametrics.png # MakerWorld参数化界面 / MakerWorld parametric interface
 └── .kiro/                           # Kiro AI助手配置 / Kiro AI assistant config
     ├── steering/                    # AI指导文档 / AI guidance documents
     │   ├── product.md              # 产品概述 / Product overview
