@@ -18,6 +18,24 @@ A parametric LEGO-compatible brick 3D model created with OpenSCAD, supporting cu
 - **Standard Specifications** - Strictly follows official LEGO dimensions
 - **Open Source** - MIT license, free to use and modify
 
+## 📸 示例渲染 / Sample Renders
+
+以下是不同配置的积木渲染效果：
+
+Here are renders of different brick configurations:
+
+### 2x1 基础积木 / 2x1 Basic Brick
+![2x1 LEGO Brick](samples/lego_basic_module_2x1.png)
+
+### 6x2 标准积木 / 6x2 Standard Brick
+![6x2 LEGO Brick](samples/lego_basic_module_6x2.png)
+
+### 6x2 底部视图 / 6x2 Bottom View
+![6x2 LEGO Brick Bottom](samples/lego_basic_module_6x2_bottom.png)
+
+### 16x16 大型底板 / 16x16 Large Baseplate
+![16x16 LEGO Baseplate](samples/lego_basic_module_16x16.png)
+
 ## 🚀 快速开始 / Quick Start
 
 ### 1. 下载和打开 / Download and Open
@@ -97,6 +115,11 @@ StandardLEGOBlock/
 ├── README.md                           # 项目说明 / Project documentation
 ├── LICENSE                            # MIT许可证 / MIT license
 ├── lego_basic_module.scad            # 主要OpenSCAD文件 / Main OpenSCAD file
+├── samples/                          # 示例渲染图片 / Sample render images
+│   ├── lego_basic_module_2x1.png    # 2x1积木渲染 / 2x1 brick render
+│   ├── lego_basic_module_6x2.png    # 6x2积木渲染 / 6x2 brick render
+│   ├── lego_basic_module_6x2_bottom.png # 6x2底部视图 / 6x2 bottom view
+│   └── lego_basic_module_16x16.png  # 16x16底板渲染 / 16x16 baseplate render
 └── .kiro/specs/lego-basic-module/    # 项目规格文档 / Project specifications
     ├── requirements.md               # 需求文档 / Requirements document
     ├── design.md                    # 设计文档 / Design document

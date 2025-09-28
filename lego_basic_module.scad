@@ -16,13 +16,13 @@
 /* [Parameters] */
 
 // 积木宽度（单位数量）- Block width in units
-width = 2; // [1:31]
+width = 16; // [1:31]
 
 // 积木长度（单位数量）- Block length in units  
-length = 1; // [1:31]
+length = 16; // [1:31]
 
 // 积木高度（层数）- Block height in layers
-height = 3; // [1:Low, 3:High]
+height = 1; // [1:Low, 3:High]
 
 /* [Hidden] */
 
